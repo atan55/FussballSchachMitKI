@@ -1,0 +1,1608 @@
+import numpy as np#übernommen
+
+class SpielStand():#übernommen 
+    def __init__(self):#übernommen
+        
+        self.spielbrett = [#übernommen
+                        ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],#übernommen
+                        ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],#übernommen
+                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
+                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
+                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
+                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
+                        ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],#übernommen
+                        ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]#übernommen
+                    ]#übernommen
+        '''
+        ["--", "--", "--", "gD", "--", "--", "--", "--"], Diese beiden Blöcke im Kommentar dienen zu testzwecken
+        ["--", "--", "--", "--", "--", "--", "--", "--"], die Tore schneller Testen kann.
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "wD", "--", "--", "--", "--"] 
+
+        ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],
+        ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],
+        ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]
+
+        '''
+        self.zugWeiß = True#übernommen
+
+        self.neueFigurFürBauern = False
+
+        self.rochadeKleinWeiß = False
+        self.rochadeGroßWeiß = False
+        self.rochadeKleinSchwarz = False
+        self.rochadeGroßSchwarz = False
+
+        self.TurmWeißLinksBenutzt = False
+        self.TurmWeißRechtsBenutzt = False
+        self.TurmSchwarzLinksBenutzt = False
+        self.TurmSchwarzRechtsBenutzt = False
+        self.KönigWeißBenutzt = False
+        self.KönigSchwarzBenutzt = False
+
+        self.enPassantFelderFürBauerWeiß = []
+        self.enPassantFürBauerWeiß = False
+        self.enPassantFelderFürBauerSchwarz = []
+        self.enPassantFürBauerSchwarz = False
+
+        self.ToreWeiß = 0
+        self.ToreSchwarz = 0
+        self.Tor = False
+
+        self.anzahlFigurenWeiß = 16
+        self.anzahlFigurenSchwarz = 16
+
+        self.spielBeendet = False
+
+        self.torFigurschlagBauernzugAnzahl = 0
+        self.tor = False
+        self.bauernzug = False
+        self.figurSchlag = False
+
+        self.starteOderBeendeSpiel = ''
+
+        self.stellungFiguren = np.array([[
+                                            ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],#Dieser Block wurde übernommen
+                                            ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],
+                                            ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]
+                                        ]])
+
+        '''
+        ["--", "--", "--", "gD", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "--", "--", "--", "--", "--"],
+        ["--", "--", "--", "wD", "--", "--", "--", "--"] 
+        '''
+
+        self.rangFürZeilen = {"1" : 7, "2" : 6, "3" : 5, "4" : 4, "5" : 3, "6" : 2, "7" : 1, "8" : 0} #Zeilen #übernommen
+        self.zeilenFürRänge = {v: k for k, v in self.rangFürZeilen.items()}#übernommen
+        self.buchstabenFürSpalten = {"a" : 0, "b" : 1, "c" : 2, "d" : 3, "e" : 4, "f" : 5, "g" : 6, "h" : 7} #Spalten #übernommen
+        self.spaltenFürBuchstaben = {v: k for k, v in self.buchstabenFürSpalten.items()}#übernommen
+
+        self.startQ = [0,0]#übernommen
+        self.endQ = [0,0]#übernommen
+
+        self.startZeile = self.startQ[0]#übernommen
+        self.startSpalte = self.startQ[1]#übernommen
+        self.endZeile = self.endQ[0]#übernommen
+        self.endSpalte = self.endQ[1]#übernommen
+        self.bewegteFigur = self.spielbrett[self.startZeile][self.startSpalte]#übernommen
+
+    def definiereZugAttribute(self, startZeile, startSpalte, endZeile, endSpalte, bewegteFigur):#übernommen
+        self.startZeile = startZeile#übernommen
+        self.startSpalte = startSpalte#übernommen
+        self.endZeile = endZeile#übernommen
+        self.endSpalte = endSpalte#übernommen
+        self.bewegteFigur = bewegteFigur#übernommen
+
+    def macheZug(self): 
+        #print("neueFigurFürBauern: ", self.neueFigurFürBauern)
+        if self.endZeile == 0 and self.endSpalte == 3 and not self.neueFigurFürBauern: 
+            #print("Test1")
+            if self.zugWeiß:
+                self.ToreWeiß += 1
+                self.tor = True
+
+                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'g':
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+                self.spielbrett[self.endZeile][self.endSpalte] = '--'#übernommen
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"#übernommen Diese Zeilen kommen im Code sehr oft vor und werden nicht immer gekennzeichnet werden.
+                self.anzahlFigurenWeiß -= 1
+                self.figurSchlag = True
+                print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+            
+            else:
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+
+        elif self.endZeile == 0 and self.endSpalte == 4 and not self.rochadeGroßSchwarz and not self.rochadeKleinSchwarz and not self.neueFigurFürBauern: #Tor
+            #print("Test2")
+            if self.zugWeiß:
+                self.ToreWeiß += 1
+                self.tor = True
+
+                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'g':
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+                print("Tore Weiß: ", self.ToreWeiß)
+                self.spielbrett[self.endZeile][self.endSpalte] = '--'
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.anzahlFigurenWeiß -= 1
+                self.figurSchlag = True
+                print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+
+            else:
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+
+        elif self.startZeile != 0 and self.endZeile == 7 and self.endSpalte == 3 and not self.neueFigurFürBauern: #Tor
+            #print("Test3")
+            if not self.zugWeiß:
+                self.ToreSchwarz += 1
+                self.figurSchlag = True
+                self.tor = True
+
+                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'w':
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+
+                print("Tore Schwarz: ", self.ToreSchwarz)
+                self.spielbrett[self.endZeile][self.endSpalte] = '--'
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.anzahlFigurenSchwarz -= 1
+                self.figurSchlag = True
+                print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+            else:
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+
+        elif self.endZeile == 7 and self.endSpalte == 4 and not self.rochadeGroßWeiß and not self.rochadeKleinWeiß and not self.neueFigurFürBauern: #Tor
+            #print("Test4")
+            if not self.zugWeiß:
+                self.ToreSchwarz += 1
+                self.tor = True
+
+                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'w':
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+
+                print("Tore Schwarz: ", self.ToreSchwarz)
+                self.spielbrett[self.endZeile][self.endSpalte] = '--'
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.anzahlFigurenSchwarz -= 1
+                self.figurSchlag = True
+                print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+            else:
+                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+
+        elif self.enPassantFürBauerWeiß:
+            #print("Test5")
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+            self.spielbrett[self.endZeile+1][self.endSpalte] = '--'
+            self.spielbrett[self.startZeile][self.startSpalte] = '--'
+            self.enPassantFürBauerWeiß = False
+            self.anzahlFigurenSchwarz -= 1
+            self.figurSchlag = True
+            self.enPassantFürBauerWeiß = False
+            print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+        elif self.enPassantFürBauerSchwarz:
+            #print("Test6")
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+            self.spielbrett[self.endZeile-1][self.endSpalte] = '--'
+            self.spielbrett[self.startZeile][self.startSpalte] = '--'
+            self.enPassantFürBauerSchwarz = False
+            self.anzahlFigurenWeiß -= 1
+            self.figurSchlag = True
+            self.enPassantFürBauerSchwarz = False
+            print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+
+        elif self.neueFigurFürBauern:
+            #print("Test7")
+            if self.spielbrett[self.endZeile][self.endSpalte][:1] == self.spielbrett[self.startZeile][self.startSpalte][:1]:
+                print("Bin drin!")
+                self.spielbrett[self.startZeile][self.startSpalte] = self.spielbrett[self.endZeile][self.endSpalte]
+
+        elif self.rochadeKleinWeiß:
+            #print("Test8")
+            self.spielbrett[7][6] = self.spielbrett[7][4]
+            self.spielbrett[7][4] = '--'
+            self.spielbrett[7][5] = self.spielbrett[7][7]
+            self.spielbrett[7][7] = '--'
+
+        elif self.rochadeGroßWeiß:
+            #print("Test9")
+            self.spielbrett[7][2] = self.spielbrett[7][4]
+            self.spielbrett[7][4] = '--'
+            self.spielbrett[7][3] = self.spielbrett[7][0]
+            self.spielbrett[7][0] = '--'
+
+        elif self.rochadeKleinSchwarz:
+            #print("Test10")
+            self.spielbrett[0][6] = self.spielbrett[0][4]
+            self.spielbrett[0][4] = '--'
+            self.spielbrett[0][5] = self.spielbrett[0][7]
+            self.spielbrett[0][7] = '--'
+
+        elif self.rochadeGroßSchwarz:
+            #print("Test11")
+            self.spielbrett[0][2] = self.spielbrett[0][4]
+            self.spielbrett[0][4] = '--'
+            self.spielbrett[0][3] = self.spielbrett[0][0]
+            self.spielbrett[0][0] = '--'
+
+        else:
+            #print("Test12")
+            if self.zugWeiß:
+                if not self.spielbrett[self.endZeile][self.endSpalte] == "--":
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+            else:
+                if not self.spielbrett[self.endZeile][self.endSpalte] == "--":
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+
+            self.spielbrett[self.startZeile][self.startSpalte] = "--"#übernommen
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur#übernommen
+    
+            if self.startZeile == 7 and self.startSpalte == 0:
+                self.TurmWeißLinksBenutzt = True
+            elif self.startZeile == 7 and self.startSpalte == 7:
+                self.TurmWeißRechtsBenutzt = True
+            elif self.startZeile == 0 and self.startSpalte == 0:
+                self.TurmSchwarzLinksBenutzt = True
+            elif self.startZeile == 0 and self.startSpalte == 7:
+                self.TurmSchwarzRechtsBenutzt = True
+            elif self.startZeile == 7 and self.startSpalte == 4:
+                self.KönigWeißBenutzt = True
+            elif self.startZeile == 0 and self.startSpalte == 4:
+                self.KönigSchwarzBenutzt = True
+
+        if self.anzahlFigurenSchwarz == 0:
+            self.ToreWeiß += self.anzahlFigurenWeiß
+            self.spielBeendet = True
+
+        elif self.anzahlFigurenWeiß == 0:
+            self.ToreSchwarz += self.anzahlFigurenSchwarz
+            self.spielBeendet = True
+
+        if self.neueFigurFürBauern:
+            self.neueFigurFürBauern = False
+            self.zugWeiß = not self.zugWeiß
+        if self.rochadeKleinWeiß:
+            self.rochadeKleinWeiß = False
+        elif self.rochadeGroßWeiß:
+            self.rochadeGroßWeiß = False
+        elif self.rochadeKleinSchwarz:
+            self.rochadeKleinSchwarz = False
+        elif self.rochadeGroßSchwarz:
+            self.rochadeGroßSchwarz = False  
+        elif self.Tor:
+            self.Tor = False    
+       
+        if (not self.tor) and (not self.bauernzug) and (not self.figurSchlag):
+            self.torFigurschlagBauernzugAnzahl += 1
+
+            if self.torFigurschlagBauernzugAnzahl == 100:
+                self.spielBeendet = True
+        else:
+            self.torFigurschlagBauernzugAnzahl = 0
+
+        self.tor = False
+        self.bauernzug = False
+        self.figurSchlag = False     
+        self.stellungFiguren = np.append(self.stellungFiguren, np.array([self.spielbrett]), axis=0)
+
+        for i, x in enumerate(self.stellungFiguren):
+            m = i
+            zaehleW = 0
+            for l in range(0,len(self.stellungFiguren)-1):
+                if m == l:
+                    continue
+                else:
+                    a = x == self.stellungFiguren[l]
+                    if a.all() == True:
+                        zaehleW += 1
+                        if zaehleW == 3:
+                            print("Diese Stellung der Figuren wiederholt sich zum dritten Mal!")        
+                            print("Das Spiel wird durch den Punktestand entschieden!") 
+                            self.spielBeendet = True
+                            break
+            zaehleW = 0
+    
+    def kontrolliere(self):
+        sZ = self.startZeile
+        sP = self.startSpalte
+        eZ = self.endZeile
+        eP = self.endSpalte
+
+        if(self.spielbrett[sZ][sP][1:] == 'B'):
+            return self.kontrolliereBauern(sZ, sP, eZ, eP)
+        elif(self.spielbrett[sZ][sP][1:] == 'T'):
+            return self.kontrolliereTurm(sZ, sP, eZ, eP)
+        elif(self.spielbrett[sZ][sP][1:] == 'P'):
+            return self.kontrolliereSpringer(sZ, sP, eZ, eP)
+        elif(self.spielbrett[sZ][sP][1:] == 'L'):
+            return self.kontrolliereLäufer(sZ, sP, eZ, eP)
+        elif(self.spielbrett[sZ][sP][1:] == 'D'):
+            return self.kontrolliereDame(sZ, sP, eZ, eP)
+        elif(self.spielbrett[sZ][sP][1:] == 'K'):
+            return self.kontrolliereKönig(sZ, sP, eZ, eP)
+    
+    def kontrolliereZugMöglichkeit(self):
+        
+        for i, zeile in enumerate(self.spielbrett):
+            for l, _ in enumerate(zeile):
+
+                if(self.spielbrett[i][l][1:] == 'B'):
+                    if self.kontrolliereBauernZug(i, l):
+                        return True
+                elif(self.spielbrett[i][l][1:] == 'T'):
+                    if self.kontrolliereTurmZug(i, l):
+                        return True
+                elif(self.spielbrett[i][l][1:] == 'S'):
+                    if self.kontrolliereSpringerZug(i, l):
+                        return True
+                elif(self.spielbrett[i][l][1:] == 'L'):
+                    if self.kontrolliereLäuferZug(i, l):
+                        return True
+                elif(self.spielbrett[i][l][1:] == 'D' or self.spielbrett[i][l][1:] == 'K'):
+                    if self.kontrolliereDameUndKönigZug(i, l):
+                        return True
+        return False
+
+    def kontrolliereBauernZug(self,zeile,spalte):
+
+        figur = self.spielbrett[zeile][spalte][:1]
+        if self.zugWeiß:
+            if figur == 'w':
+                if zeile == 3:
+                    if not len(self.enPassantFelderFürBauerWeiß) == 0:
+                        for p in self.enPassantFelderFürBauerWeiß:
+                            if (zeile, spalte) == p[0]:
+                                return True
+                if zeile > 0:
+                    if (self.spielbrett[zeile-1][spalte]) == '--': #Bauer wird ein Feld nach vorne bewegt.
+                        return True
+                if (zeile > 0 and spalte > 0):
+                    if (self.spielbrett[zeile-1][spalte-1][:1] == 'g'): #Bauer schlägt eine Figur oben links
+                        return True
+                if (zeile > 0 and spalte < 7):
+                    if (self.spielbrett[zeile-1][spalte+1][:1] == 'g'): #Bauer schlägt eine Figur oben rechts
+                        return True
+                if (zeile == 6): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
+                    return True
+                
+        elif not self.zugWeiß:
+            if figur == 'g':
+                if zeile == 4:
+                    if not len(self.enPassantFelderFürBauerSchwarz) == 0:
+                        for p in self.enPassantFelderFürBauerSchwarz:
+                            if (zeile, spalte) == p[0]:
+                                return True               
+                if zeile < 7:
+                    if (self.spielbrett[zeile+1][spalte]) == '--': #Bauer wird ein Feld nach vorne bewegt.
+                        return True
+                if(zeile < 7 and spalte > 0):
+                    if (self.spielbrett[zeile+1][spalte-1][:1] == 'w'): #Bauer schlägt eine Figur unten links
+                        return True
+                if(zeile < 7 and spalte < 7):
+                    if (self.spielbrett[zeile+1][spalte+1][:1] == 'w'): #Bauer schlägt eine Figur unten rechts
+                        return True
+                if (zeile == 1): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
+                    return True
+
+    def kontrolliereBauern(self, sZ, sP, eZ, eP): 
+
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+            if figur == 'w':
+                if sZ == 3:
+                    if not len(self.enPassantFelderFürBauerWeiß) == 0:
+                        for p in self.enPassantFelderFürBauerWeiß:
+                            if (sZ, sP) == p[0] and gewünschtesFeld == p[1]:
+                                erreichbareFelder.append(p[1])
+                                self.enPassantFürBauerWeiß = True
+                if sZ > 0:
+                    if (self.spielbrett[sZ-1][sP]) == '--': #Bauer wird ein Feld nach vorne bewegt.
+                        erreichbareFelder.append((sZ-1, sP))
+                if (sZ > 0 and sP > 0):
+                    if (self.spielbrett[sZ-1][sP-1][:1] == 'g'): #Bauer schlägt eine Figur oben links
+                        erreichbareFelder.append((sZ-1, sP-1))
+                if (sZ > 0 and sP < 7):
+                    if (self.spielbrett[sZ-1][sP+1][:1] == 'g'): #Bauer schlägt eine Figur oben rechts
+                        erreichbareFelder.append((sZ-1, sP+1))
+                if (sZ == 6): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
+                    erreichbareFelder.append((sZ-2, sP))
+                    if gewünschtesFeld == (sZ-2, sP):
+    
+                        if sP > 0 and sZ > 1:
+                            if self.spielbrett[sZ-2][sP-1] == 'gB':
+                                self.enPassantFelderFürBauerSchwarz.append([(sZ-2,sP-1), (sZ-1, sP)])
+
+                        if sZ > 1 and sP < 7:
+                            if self.spielbrett[sZ-2][sP+1] == 'gB':
+                                self.enPassantFelderFürBauerSchwarz.append([(sZ-2,sP+1), (sZ-1, sP)]) 
+
+                if (sZ == 0): #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+
+                    if(self.spielbrett[eZ][eP] != '--' and self.spielbrett[eZ][eP][:1] == 'w'):
+                        self.neueFigurFürBauern = True
+                        print("In kontrolliereBauer, Weiß: ", self.neueFigurFürBauern)
+                        erreichbareFelder.append((eZ, eP))
+
+        elif not self.zugWeiß:
+
+            if figur == 'g':
+                if sZ == 4:
+                    if not len(self.enPassantFelderFürBauerSchwarz) == 0:
+                        for p in self.enPassantFelderFürBauerSchwarz:
+                            if (sZ, sP) == p[0] and gewünschtesFeld == p[1]:
+                                erreichbareFelder.append(p[1])
+                                self.enPassantFürBauerSchwarz = True
+                
+                if sZ < 7:
+                    if (self.spielbrett[sZ+1][sP]) == '--': #Bauer wird ein Feld nach vorne bewegt.
+                        erreichbareFelder.append((sZ+1, sP))
+                if(sZ < 7 and sP > 0):
+                    if (self.spielbrett[sZ+1][sP-1][:1] == 'w'): #Bauer schlägt eine Figur unten links
+                        erreichbareFelder.append((sZ+1, sP-1))
+                if(sZ < 7 and sP < 7):
+                    if (self.spielbrett[sZ+1][sP+1][:1] == 'w'): #Bauer schlägt eine Figur unten rechts
+                        erreichbareFelder.append((sZ+1, sP+1))
+                if (sZ == 1): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
+                    erreichbareFelder.append((sZ+2, sP))
+                    if gewünschtesFeld == (sZ+2, sP):
+                        if sP > 0 and sZ < 6:
+                            if self.spielbrett[sZ+2][sP-1] == 'wB':
+                                self.enPassantFelderFürBauerWeiß.append([(sZ+2,sP-1), (sZ+1, sP)])
+
+                        if sZ < 6 and sP < 7:
+                            if self.spielbrett[sZ+2][sP+1] == 'wB':
+                                self.enPassantFelderFürBauerWeiß.append([(sZ+2,sP+1), (sZ+1, sP)]) 
+                if (sZ == 7): #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+
+                    if(self.spielbrett[eZ][eP] != '--' and self.spielbrett[eZ][eP][:1] == 'g'):
+                        self.neueFigurFürBauern = True
+                        print("In kontrolliereBauer, Schwarz: ", self.neueFigurFürBauern)
+                        erreichbareFelder.append((eZ, eP))
+
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False
+        
+    def kontrolliereTurmZug(self, zeile, spalte):
+
+        figur = self.spielbrett[zeile][spalte][:1]
+        if self.zugWeiß:
+            if figur == 'w':
+                if spalte > 0 :
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'g':
+                        return True
+                if spalte < 7:
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'g':
+                        return True
+                if zeile > 0:
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'g':
+                        return True
+                if zeile < 7:
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'g':
+                        return True
+
+        elif not self.zugWeiß:
+            if figur == 'g':
+                if spalte > 0 :
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'w':
+                        return True
+                if spalte < 7:
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'w':
+                        return True
+                if zeile > 0:
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'w':
+                        return True
+                if zeile < 7:
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'w':
+                        return True
+
+    def kontrolliereTurm(self, sZ, sP, eZ, eP):
+      
+        pHilfLinks = 1
+        pHilfRechts = 1
+        zHilfOben = 1
+        zHilfUnten = 1
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+            if figur == 'w':
+                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                while True:
+
+                    if (sP-pHilfLinks >= 0):   
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
+                            pHilfLinks = 1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks=1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks] == '--'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                while True:
+
+                    if (sP+pHilfRechts <= 7): 
+                        
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
+                            pHilfRechts = 1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts=1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts] == '--'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts+=1  
+                    else:
+                        break             
+
+                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                while True:
+                    if sZ - zHilfOben >= 0:
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
+                            zHilfOben = 1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben=1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP] == '--'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                while True:
+
+                    if sZ+zHilfUnten <= 7:
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP] == '--'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten+=1
+                    else:
+                        zHilfUnten=1
+                        break
+                
+                if sZ == 7 and sP == 0:
+                    if self.TurmWeißLinksBenutzt == False and self.KönigWeißBenutzt == False:
+                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--' and self.spielbrett[sZ][sP+3] == '--':
+                            if (eZ, eP) == (7,4):
+                                erreichbareFelder.append((sZ, sP+4))
+                                self.rochadeGroßWeiß = True
+
+                if sZ == 7 and sP == 7:
+                    if self.TurmWeißRechtsBenutzt == False and self.KönigWeißBenutzt == False:
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--':
+                            if (eZ, eP) == (7,4):
+                                erreichbareFelder.append((sZ, sP-3))
+                                self.rochadeKleinWeiß = True
+
+        elif not self.zugWeiß:
+
+            if figur == 'g':
+                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                while True:
+
+                    if (sP-pHilfLinks >= 0):   
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                            pHilfLinks = 1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks=1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks] == '--'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                while True:
+
+                    if (sP+pHilfRechts <= 7): 
+                        
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                            pHilfRechts = 1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts=1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts] == '--'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts+=1  
+                    else:
+                        break             
+
+                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                while True:
+                    if sZ - zHilfOben >= 0:
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                            zHilfOben = 1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben=1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP] == '--'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                while True:
+                    
+                    if sZ+zHilfUnten <= 7:
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP] == '--'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten+=1
+                    else:
+                        zHilfUnten=1
+                        break
+
+                if sZ == 0 and sP == 0:
+                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
+                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--' and self.spielbrett[sZ][sP+3] == '--':
+                            if (eZ, eP) == (0,4):
+                                erreichbareFelder.append((sZ, sP+4))
+                                self.rochadeGroßSchwarz = True
+
+                if sZ == 0 and sP == 7:
+                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--':
+                            if (eZ, eP) == (0,4):
+                                self.rochadeKleinSchwarz = True
+                                erreichbareFelder.append((sZ, sP-3))
+
+
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False
+
+    def kontrolliereSpringerZug(self, zeile, spalte):
+        figur = self.spielbrett[zeile][spalte][:1]
+        if self.zugWeiß:
+            if figur == 'w':
+                if (spalte < 7 and zeile > 1):
+                    feld = self.spielbrett[zeile-2][spalte+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
+                    if feld[:1] != 'w': 
+                        return True
+                if (spalte > 0 and zeile > 1):
+                    feld = self.spielbrett[zeile-2][spalte-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile > 0 and spalte < 6):
+                    feld = self.spielbrett[zeile-1][spalte+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile > 0 and spalte > 1):
+                    feld = self.spielbrett[zeile-1][spalte-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile < 6 and spalte < 7):
+                    feld = self.spielbrett[zeile+2][spalte+1] #Springer springt zwei Felder nach unten und ein Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile < 6 and spalte > 0):
+                    feld = self.spielbrett[zeile+2][spalte-1] #Springer springt zwei Felder nach unten und ein Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile < 7 and spalte < 6):
+                    feld = self.spielbrett[zeile+1][spalte+2] #Springer springt ein Feld nach unten und zwei Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        return True
+                if (zeile < 7 and spalte > 1):
+                    feld = self.spielbrett[zeile+1][spalte-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        return True
+
+        elif not self.zugWeiß:
+            if figur == 'g':
+                if (spalte < 7 and zeile > 1):
+                    feld = self.spielbrett[zeile-2][spalte+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
+                    if feld[:1] != 'g': 
+                        return True
+                if (spalte > 0 and zeile > 1):
+                    feld = self.spielbrett[zeile-2][spalte-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile > 0 and spalte < 6):
+                    feld = self.spielbrett[zeile-1][spalte+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile > 0 and spalte > 1):
+                    feld = self.spielbrett[zeile-1][spalte-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile < 6 and spalte < 7):
+                    feld = self.spielbrett[zeile+2][spalte+1] #Springer springt zwei Felder nach unten und ein Felder nach rechts.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile < 6 and spalte > 0):
+                    feld = self.spielbrett[zeile+2][spalte-1] #Springer springt zwei Felder nach unten und ein Felder nach links.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile < 7 and spalte < 6):
+                    feld = self.spielbrett[zeile+1][spalte+2] #Springer springt ein Feld nach unten und zwei Felder nach rechts.
+                    if (feld[:1] != 'g'): 
+                        return True
+                if (zeile < 7 and spalte > 1):
+                    feld = self.spielbrett[zeile+1][spalte-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
+                    if (feld[:1] != 'g'): 
+                        return True
+
+    def kontrolliereSpringer(self, sZ, sP, eZ, eP):
+
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+
+            if figur == 'w':
+
+                if (sP < 7 and sZ > 1):
+                    feld = self.spielbrett[sZ-2][sP+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
+                    if feld[:1] != 'w': 
+                        erreichbareFelder.append((sZ-2, sP+1))
+                if (sP > 0 and sZ > 1):
+                    feld = self.spielbrett[sZ-2][sP-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ-2, sP-1))
+                if (sZ > 0 and sP < 6):
+                    feld = self.spielbrett[sZ-1][sP+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ-1, sP+2))
+                if (sZ > 0 and sP > 1):
+                    feld = self.spielbrett[sZ-1][sP-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ-1, sP-2))
+                if (sZ < 6 and sP < 7):
+                    feld = self.spielbrett[sZ+2][sP+1] #Springer springt zwei Felder nach unten und ein Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ+2, sP+1))
+                if (sZ < 6 and sP > 0):
+                    feld = self.spielbrett[sZ+2][sP-1] #Springer springt zwei Felder nach unten und ein Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ+2, sP-1))
+                if (sZ < 7 and sP < 6):
+                    feld = self.spielbrett[sZ+1][sP+2] #Springer springt ein Feld nach unten und zwei Felder nach rechts.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ+1, sP+2))
+                if (sZ < 7 and sP > 1):
+                    feld = self.spielbrett[sZ+1][sP-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
+                    if (feld[:1] != 'w'): 
+                        erreichbareFelder.append((sZ+1, sP-2))
+
+        elif not self.zugWeiß:
+        
+            if figur == 'g':
+
+                if (sP < 7 and sZ > 1):
+                    feld = self.spielbrett[sZ-2][sP+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
+                    if feld[:1] != 'g': 
+                        erreichbareFelder.append((sZ-2, sP+1))
+                if (sP > 0 and sZ > 1):
+                    feld = self.spielbrett[sZ-2][sP-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ-2, sP-1))
+                if (sZ > 0 and sP < 6):
+                    feld = self.spielbrett[sZ-1][sP+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ-1, sP+2))
+                if (sZ > 0 and sP > 1):
+                    feld = self.spielbrett[sZ-1][sP-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ-1, sP-2))
+                if (sZ < 6 and sP < 7):
+                    feld = self.spielbrett[sZ+2][sP+1] #Springer springt zwei Felder nach unten und ein Feld nach rechts.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ+2, sP+1))
+                if (sZ < 6 and sP > 0):
+                    feld = self.spielbrett[sZ+2][sP-1] #Springer springt zwei Felder nach unten und ein Feld nach links.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ+2, sP-1))
+                if (sZ < 7 and sP < 6):
+                    feld = self.spielbrett[sZ+1][sP+2] #Springer springt ein Feld nach unten und zwei Feld nach rechts.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ+1, sP+2))
+                if (sZ < 7 and sP > 1):
+                    feld = self.spielbrett[sZ+1][sP-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
+                    if (feld[:1] != 'g'): 
+                        erreichbareFelder.append((sZ+1, sP-2))
+
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False
+
+    def kontrolliereLäuferZug(self, zeile, spalte):
+
+        figur = self.spielbrett[zeile][spalte][:1]
+        if self.zugWeiß:
+            if figur == 'w':
+                
+                if zeile < 0 and spalte > 0:
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'g':
+                        return True
+                if zeile < 0 and spalte < 7:
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'g':
+                        return True
+                if zeile < 7 and spalte > 0:
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'g':
+                        return True
+                if zeile < 7 and spalte < 7:
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'g':
+                        return True
+        else:
+            if figur == 'g':
+                
+                if zeile < 0 and spalte > 0:
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'w':
+                        return True
+                if zeile < 0 and spalte < 7:
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'w':
+                        return True
+                if zeile < 7 and spalte > 0:
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'w':
+                        return True
+                if zeile < 7 and spalte < 7:
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'w':
+                        return True    
+
+    def kontrolliereLäufer(self, sZ, sP, eZ, eP):
+        
+        pHilfLinksOben = 1
+        pHilfLinksUnten = 1
+        pHilfRechtsOben = 1
+        pHilfRechtsUnten = 1
+        zHilfObenLinks = 1
+        zHilfObenRechts = 1
+        zHilfUntenLinks = 1
+        zHilfUntenRechts = 1
+
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+
+            if figur == 'w':
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'):
+                        pHilfLinksOben = 1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben = 1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben+=1
+                        zHilfObenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'):
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben+=1
+                        zHilfObenRechts+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'w'):
+                        pHilfLinksUnten = 1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten=1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten+=1
+                        zHilfUntenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'w'):
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten+=1
+                        zHilfUntenRechts+=1
+            
+        elif not self.zugWeiß:
+            
+            if figur == 'g':
+    
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                        pHilfLinksOben = 1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben=1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben+=1
+                        zHilfObenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben+=1
+                        zHilfObenRechts+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                        pHilfLinksUnten = 1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'w'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten=1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten+=1
+                        zHilfUntenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'w'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten+=1
+                        zHilfUntenRechts+=1
+                    
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False    
+
+    def kontrolliereDameUndKönigZug(self, zeile, spalte):
+
+        figur = self.spielbrett[zeile][spalte][:1]
+        if self.zugWeiß:
+            if figur == 'w':
+                if spalte > 0 :
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'g':
+                        return True
+                if spalte < 7:
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'g':
+                        return True
+                if zeile > 0:
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'g':
+                        return True
+                if zeile < 7:
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'g':
+                        return True
+                    
+                if zeile < 0 and spalte > 0:
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'g':
+                        return True
+                if zeile < 0 and spalte < 7:
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'g':
+                        return True
+                if zeile < 7 and spalte > 0:
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'g':
+                        return True
+                if zeile < 7 and spalte < 7:
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'g':
+                        return True
+
+        elif not self.zugWeiß:
+
+            if figur == 'g':
+                if spalte > 0 :
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'w':
+                        return True
+                if spalte < 7:
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'w':
+                        return True
+                if zeile > 0:
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'w':
+                        return True
+                if zeile < 7:
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'w':
+                        return True
+                    
+                if zeile < 0 and spalte > 0:
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'w':
+                        return True
+                if zeile < 0 and spalte < 7:
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'w':
+                        return True
+                if zeile < 7 and spalte > 0:
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'w':
+                        return True
+                if zeile < 7 and spalte < 7:
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'w':
+                        return True       
+
+    def kontrolliereDame(self, sZ, sP, eZ, eP):        
+        
+        pHilfLinks = 1
+        pHilfRechts = 1
+        zHilfOben = 1
+        zHilfUnten = 1
+
+        pHilfLinksOben = 1
+        pHilfLinksUnten = 1
+        pHilfRechtsOben = 1
+        pHilfRechtsUnten = 1
+        zHilfObenLinks = 1
+        zHilfObenRechts = 1
+        zHilfUntenLinks = 1
+        zHilfUntenRechts = 1
+
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+
+            if figur == 'w':
+
+                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                while True:
+                    
+                    if (sP-pHilfLinks >= 0):   
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
+                            pHilfLinks = 1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks=1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks] == '--'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                while True:
+                
+                    if (sP+pHilfRechts <= 7): 
+                        
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
+                            pHilfRechts = 1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts=1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts] == '--'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts+=1  
+                    else:
+                        break             
+
+                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                while True:
+                    if sZ - zHilfOben >= 0:
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
+                            zHilfOben = 1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben=1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP] == '--'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                while True:
+                    
+                    if sZ+zHilfUnten <= 7:
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP] == '--'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten+=1
+                    else:
+                        zHilfUnten=1
+                        break
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'):
+                        pHilfLinksOben = 1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben=1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben+=1
+                        zHilfObenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'):
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben+=1
+                        zHilfObenRechts+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'w'):
+                        pHilfLinksUnten = 1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten=1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten+=1
+                        zHilfUntenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'w'):
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten = 1
+                        zHilfUnten = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten+=1
+                        zHilfUntenRechts+=1
+
+
+        elif not self.zugWeiß:
+
+            if figur == 'g':
+
+                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                while True:
+                    
+                    if (sP-pHilfLinks >= 0):   
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                            pHilfLinks = 1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks=1
+                            break
+                        if(self.spielbrett[sZ][sP-pHilfLinks] == '--'):
+                            erreichbareFelder.append((sZ, sP-pHilfLinks))
+                            pHilfLinks+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                while True:
+                
+                    if (sP+pHilfRechts <= 7): 
+                        
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                            pHilfRechts = 1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts=1
+                            break
+                        if(self.spielbrett[sZ][sP+pHilfRechts] == '--'):
+                            erreichbareFelder.append((sZ, sP+pHilfRechts))
+                            pHilfRechts+=1  
+                    else:
+                        break             
+
+                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                while True:
+                    if sZ - zHilfOben >= 0:
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                            zHilfOben = 1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben=1
+                            break
+                        if(self.spielbrett[sZ-zHilfOben][sP] == '--'):
+                            erreichbareFelder.append((sZ-zHilfOben, sP))
+                            zHilfOben+=1
+                    else:
+                        break
+
+                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                while True:
+                   
+                    if sZ+zHilfUnten <= 7:
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten=1
+                            break
+                        if(self.spielbrett[sZ+zHilfUnten][sP] == '--'):
+                            erreichbareFelder.append((sZ+zHilfUnten, sP))
+                            zHilfUnten+=1
+                    else:
+                        zHilfUnten=1
+                        break
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                        pHilfLinksOben = 1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben=1
+                        zHilfObenLinks = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                        pHilfLinksOben+=1
+                        zHilfObenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
+                        break
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben = 1
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'):
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                        pHilfRechtsOben+=1
+                        zHilfObenRechts+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                
+                    if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                        pHilfLinksUnten = 1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'w'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten=1
+                        zHilfUntenLinks = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
+                        pHilfLinksUnten+=1
+                        zHilfUntenLinks+=1
+
+                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                while True:
+                    
+                    if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
+                        break
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                        pHilfRechtsUnten = 1
+                        zHilfUntenRechts = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'w'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten = 1
+                        zHilfUnten = 1
+                        break
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten] == '--'):
+                        erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
+                        pHilfRechtsUnten+=1
+                        zHilfUntenRechts+=1
+
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False
+
+    def kontrolliereKönig(self, sZ, sP, eZ, eP):
+        
+        gewünschtesFeld = (eZ, eP)
+        erreichbareFelder = []
+        figur = self.spielbrett[sZ][sP][:1]
+
+        if self.zugWeiß:
+
+            if figur == 'w':
+
+                if sZ > 0:
+                    if self.spielbrett[sZ-1][sP][:1] != 'w': #König wird ein Feld nach oben bewegt.
+                        erreichbareFelder.append((sZ-1, sP))
+                
+                if sZ > 0 and sP > 0: 
+                    if self.spielbrett[sZ-1][sP-1][:1] != 'w': #König wird ein Feld nach oben und ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ-1, sP-1))
+                
+                if sZ > 0 and sP < 7:
+                    if self.spielbrett[sZ-1][sP+1][:1] != 'w': #König wird ein Feld nach oben und ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ-1, sP+1))
+                
+                if sP < 7:
+                    if self.spielbrett[sZ][sP+1][:1] != 'w': #König wird ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ, sP+1))
+                
+                if sZ < 7 and sP < 7:
+                    if self.spielbrett[sZ+1][sP+1][:1] != 'w': #König wird ein Feld nach unten und ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ+1, sP+1))
+
+                if sZ < 7:
+                    if self.spielbrett[sZ+1][sP][:1] != 'w': #König wird ein Feld nach unten bewegt.
+                        erreichbareFelder.append((sZ+1, sP))
+
+                if sZ < 7 and sP > 0:        
+                    if self.spielbrett[sZ+1][sP-1][:1] != 'w': #König wird ein Feld nach unten und ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ+1, sP-1))
+
+                if sP > 0:
+                    if self.spielbrett[sZ][sP-1][:1] != 'w': #König wird ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ, sP-1))
+
+                if sZ == 7 and sP == 4:
+                    if self.TurmWeißLinksBenutzt == False and self.KönigWeißBenutzt == False:
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
+                            if (eZ,eP) == (7,0):
+                                erreichbareFelder.append((sZ, sP-4))
+                                self.rochadeGroßWeiß = True
+
+                    if self.TurmWeißRechtsBenutzt == False and self.KönigWeißBenutzt == False:
+                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--':
+                            if (eZ,eP) == (7,7):
+                                erreichbareFelder.append((sZ, sP+3))  
+                                self.rochadeKleinWeiß = True  
+
+        elif not self.zugWeiß:
+
+            if figur == 'g':
+        
+                if sZ > 0:
+                    if self.spielbrett[sZ-1][sP][:1] != 'g': #König wird ein Feld nach oben bewegt.
+                        erreichbareFelder.append((sZ-1, sP))
+                
+                if sZ > 0 and sP > 0: 
+                    if self.spielbrett[sZ-1][sP-1][:1] != 'g': #König wird ein Feld nach oben und ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ-1, sP-1))
+                
+                if sZ > 0 and sP < 7:
+                    if self.spielbrett[sZ-1][sP+1][:1] != 'g': #König wird ein Feld nach oben und ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ-1, sP+1))
+                
+                if sP < 7:
+                    if self.spielbrett[sZ][sP+1][:1] != 'g': #König wird ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ, sP+1))
+                
+                if sZ < 7 and sP < 7:
+                    if self.spielbrett[sZ+1][sP+1][:1] != 'g': #König wird ein Feld nach unten und ein Feld nach rechts bewegt.
+                        erreichbareFelder.append((sZ+1, sP+1))
+
+                if sZ < 7:
+                    if self.spielbrett[sZ+1][sP][:1] != 'g': #König wird ein Feld nach unten bewegt.
+                        erreichbareFelder.append((sZ+1, sP))
+
+                if sZ < 7 and sP > 0:        
+                    if self.spielbrett[sZ+1][sP-1][:1] != 'g': #König wird ein Feld nach unten und ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ+1, sP-1))
+
+                if sP > 0:
+                    if self.spielbrett[sZ][sP-1][:1] != 'g': #König wird ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ, sP-1))
+
+                if sZ == 0 and sP == 4:
+                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
+                            if (eZ,eP) == (0,0):
+                                erreichbareFelder.append((sZ, sP-4))
+                                self.rochadeGroßSchwarz = True
+
+                    if self.TurmSchwarzRechtsBenutzt == False and self.KönigSchwarzBenutzt == False:
+                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--':
+                            if (eZ,eP) == (0,7):    
+                                erreichbareFelder.append((sZ, sP+3))
+                                self.rochadeKleinSchwarz = True    
+
+        for x in erreichbareFelder:
+            if gewünschtesFeld == x:
+                return True
+
+        gewünschtesFeld = ()
+        erreichbareFelder = []
+        return False
