@@ -1,0 +1,265 @@
+from SchachStandAktualisierung import SpielStand
+from typing import List
+import numpy as np
+import math
+
+class Baum():
+
+    def __init__(self, w: SpielStand):
+        self.wurzel = w
+        self.wurzel.kinder = []
+        self.wurzel.punkte = 0
+        self.wurzel.zugWeiß = False
+        self.wurzel.möglicheFolgeStellungFürKI = True
+        self.listeEbene1 = np.array([])
+        self.listeEbene2 = np.array([])
+        self.listeEbene3 = np.array([])
+        self.listeEbene4 = np.array([])
+        self.listeEbene5 = np.array([])
+        
+
+    def besterZug(self):
+        
+        listeZugInformationen = []
+        EndWert = self.minimax(self.wurzel, True, -math.inf, math.inf)
+        besterWertGefunden = False
+
+        for k in self.listeEbene2:
+            if k.beta == EndWert:
+                besterWertGefunden = True
+                listeZugInformationen.extend([k.startZeile, k.startSpalte, k.endZeile, k.endSpalte, k.bewegteFigur, k.löscheBauern])
+                return listeZugInformationen
+            
+        if besterWertGefunden == False:
+            for k in self.listeEbene2:
+                if k.punkte == EndWert:
+                    besterWertGefunden = True
+                    listeZugInformationen.extend([k.startZeile, k.startSpalte, k.endZeile, k.endSpalte, k.bewegteFigur, k.löscheBauern])
+                    return listeZugInformationen
+
+    def minimax(self, knoten, maxSpieler, alpha, beta):
+        
+        if len(knoten.kinder) == 0:
+            return knoten.punkte
+
+        elif maxSpieler:
+            besterWert = -math.inf 
+            for k in knoten.kinder:
+                wert = self.minimax(k, False, alpha, beta)
+                besterWert = max(besterWert, wert) 
+                alpha = max(alpha, besterWert)
+                knoten.alpha = besterWert
+                if beta <= alpha:
+                #if alpha <= beta:
+                    break
+            return besterWert
+        
+        else :
+            besterWert = math.inf
+            for k in knoten.kinder:
+                wert = self.minimax(k, True, alpha, beta)
+                besterWert = min(besterWert, wert) 
+                beta = min(beta, besterWert)
+                knoten.beta = besterWert
+                if beta <= alpha:
+                #if alpha <= beta:
+                    break
+            return besterWert
+
+    def bewerteKnotenUndErstelleKinder(self, liste1, liste2, bewerteNeueEbene = False):
+        listeEbeneX = []
+        listeEbeneY = []
+        listeZuLöschenderKnoten = []
+
+        for l in liste1:
+            kopieKnoten = l.kopiereSpielStand()
+            l.ermittleAlleMöglichenZüge(kopieKnoten, liste1, liste2, listeZuLöschenderKnoten)
+
+        #print("lllll")
+        for l in listeZuLöschenderKnoten:
+            #print("mmmmm")
+            #print(l.spielbrett)
+            liste1.remove(l)
+        listeZuLöschenderKnoten.clear()
+
+        listeEbeneX = liste1.copy()
+        #print("sssss")
+        #for l in listeEbeneX:
+        #    print(l.spielbrett)
+        #print("Laenge l: ", len(listeEbeneX), " Laenge l2: ", len(self.listeEbene1))
+        liste1.clear()
+
+        if bewerteNeueEbene:
+            for l in liste2:
+                kopieKnoten = l.kopiereSpielStand()
+                l.ermittleAlleMöglichenZüge(kopieKnoten, liste2, liste1, listeZuLöschenderKnoten, False)
+
+            for l in listeZuLöschenderKnoten:
+                #print("22222")
+                liste2.remove(l)
+            listeZuLöschenderKnoten.clear()
+
+            listeEbeneY = liste2.copy()
+            liste2.clear()
+
+        if bewerteNeueEbene:
+            return (listeEbeneX, listeEbeneY)
+        else:
+            return listeEbeneX
+        
+    def erstelleBaum(self):
+
+        #self.wurzel.zugWeiß = True
+        self.wurzel.zugWeiß = False
+        #print("wurzel Zugweis: ", self.wurzel.zugWeiß)
+        liste1 = [self.wurzel]
+        liste2 = []
+        
+        x = self.bewerteKnotenUndErstelleKinder(liste1, liste2)
+        self.listeEbene1 = x.copy()
+
+        (x,y) = self.bewerteKnotenUndErstelleKinder(liste2, liste1, True)
+        self.listeEbene2 = x.copy()
+        self.listeEbene3 = y.copy()        
+
+        liste1 = y
+        liste1.sort(key=self.gibPunkteZurück, reverse=True)
+        #print("Länge der Liste: ", len(liste1))
+        liste1 = liste1[:50]
+
+        #x = self.bewerteKnotenUndErstelleKinder(liste2, liste1)
+        #self.listeEbene2 = x.copy()
+
+        #x = self.bewerteKnotenUndErstelleKinder(liste1, liste2)
+        #self.listeEbene3 = x.copy()
+
+        #print("Länge der dritten Ebene: ", len(self.listeEbene3))
+
+        (x,y) = self.bewerteKnotenUndErstelleKinder(liste1, liste2, True)
+        self.listeEbene4 = x.copy()
+        self.listeEbene5 = y.copy()
+
+
+
+    def gibPunkteZurück(self, knoten):
+        return knoten.punkte
+    
+
+    def gebeBaumAus(self):
+        
+        print("Ebene 1:\n\n")
+        for k in self.listeEbene1:
+            
+            print("################################################################################################################")
+
+            if k.zugWeiß == False:
+                print("\nWeiß ist dran")
+            else:
+                print("\nSchwarz ist dran")
+
+            print("\nStellung der Figuren des Knotens:\n ", k.spielbrett)
+            print("\nPunkte dieses Knotens: ", k.punkte)
+            print("\nIst das Spiel beendet: ", k.spielBeendet)
+            print("\nAnzahl Figuren Weiß: ", k.anzahlFigurenWeiß)
+            print("\nAnzahl Figuren Schwarz: ", k.anzahlFigurenSchwarz)
+            #print("\nzugWeiß: ", k.zugWeiß)
+            print("Informationen des Zuges: ", k.startZeile, " ", k.startSpalte, " ", k.endZeile, " ", k.endSpalte)
+            print("-----------------------------------------------------------------------------------------------------------------")
+        print("Anzahl der Stellung der Figuren in der ersten Ebene: ", len(self.listeEbene1))
+
+        
+        print("Ebene 2:\n\n")
+        for k in self.listeEbene2:
+            
+            print("################################################################################################################")
+
+            #if k.elternknoten.punkte != k.punkte:
+            #    print("Die Punkte sind unterschiedlich 2!")
+
+            if k.zugWeiß == False:
+                print("\nWeiß ist dran")
+            else:
+                print("\nSchwarz ist dran")
+
+            print("\n Ebene 2, Elternknoten Spielbrett: \n", k.elternknoten.spielbrett)
+            print("\n Punkte des Elternknoten: ", k.elternknoten.punkte)
+            print("\nStellung der Figuren des Knotens:\n ", k.spielbrett)
+            print("\nPunkte dieses Knotens: ", k.punkte)
+            print("\nHaben die beiden Objekte die gleiche Referenz?: ", k.spielbrett is k.elternknoten.spielbrett)
+            print("\nIst das Spiel im Elternknoten beendet: ", k.elternknoten.spielBeendet)
+            print("\nIst das Spiel beendet: ", k.spielBeendet)
+            #print("\nzugWeiß: ", k.zugWeiß)
+            print("Informationen des Zuges: ", k.startZeile, " ", k.startSpalte, " ", k.endZeile, " ", k.endSpalte)
+            print("-----------------------------------------------------------------------------------------------------------------")
+        print("Anzahl der Stellung der Figuren in der zweiten Ebene: ", len(self.listeEbene2))
+        
+        
+        print("Ebene 3:\n\n")
+        for k in self.listeEbene3:
+            print("################################################################################################################")
+
+            #if k.elternknoten.punkte != k.punkte:
+            #    print("Die Punkte sind unterschiedlich 3!")
+
+            if k.zugWeiß == False:
+                print("\nWeiß ist dran")
+            else:
+                print("\nSchwarz ist dran")
+
+            print("\n Ebene 3, Elternknoten Spielbrett: \n", k.elternknoten.spielbrett)
+            print("\n Punkte des Elternknoten: \n", k.elternknoten.punkte)
+            print("\nStellung der Figuren des Knotens: \n", k.spielbrett)
+            print("\nPunkte dieses Knotens: ", k.punkte)
+            print("\nHaben die beiden Objekte die gleiche Referenz?: ", k.spielbrett is k.elternknoten.spielbrett)
+            print("\nIst das Spiel im Elternknoten beendet: ", k.elternknoten.spielBeendet)
+            print("\nIst das Spiel beendet: ", k.spielBeendet)
+            #print("\nzugWeiß: ", k.zugWeiß)
+            print("Informationen des Zuges: ", k.startZeile, " ", k.startSpalte, " ", k.endZeile, " ", k.endSpalte)
+            print("-----------------------------------------------------------------------------------------------------------------")
+        print("Anzahl der Stellung der Figuren in der dritten Ebene: ", len(self.listeEbene3))
+        
+        
+        print("Ebene 4:\n\n")
+        for k in self.listeEbene4:
+
+            print("################################################################################################################")
+
+            #if k.elternknoten.punkte != k.punkte:
+            #    print("Die Punkte sind unterschiedlich 4!")
+
+            if k.zugWeiß == False:
+                print("\nWeiß ist dran")
+            else:
+                print("\nSchwarz ist dran")
+
+            print("\n Ebene 4, Elternknoten Spielbrett: \n", k.elternknoten.spielbrett)
+            print("\n Punkte des Elternknoten: \n", k.elternknoten.punkte)
+            print("\nStellung der Figuren des Knotens: \n", k.spielbrett)
+            print("\nPunkte dieses Knotens: ", k.punkte)
+            print("\nHaben die beiden Objekte die gleiche Referenz?: ", k.spielbrett is k.elternknoten.spielbrett)
+            print("Informationen des Zuges: ", k.startZeile, " ", k.startSpalte, " ", k.endZeile, " ", k.endSpalte)
+            print("-----------------------------------------------------------------------------------------------------------------")
+        print("Anzahl der Stellung der Figuren in der vierten Ebene: ", len(self.listeEbene4))
+
+        print("Ebene 5:\n\n")
+        for k in self.listeEbene5:
+
+            print("################################################################################################################")
+
+            #if k.elternknoten.punkte != k.punkte:
+            #    print("Die Punkte sind unterschiedlich 4!")
+
+            if k.zugWeiß == False:
+                print("\nWeiß ist dran")
+            else:
+                print("\nSchwarz ist dran")
+
+            print("\n Ebene 5, Elternknoten Spielbrett: \n", k.elternknoten.spielbrett)
+            print("\n Punkte des Elternknoten: \n", k.elternknoten.punkte)
+            print("\nStellung der Figuren des Knotens: \n", k.spielbrett)
+            print("\nPunkte dieses Knotens: ", k.punkte)
+            print("\nHaben die beiden Objekte die gleiche Referenz?: ", k.spielbrett is k.elternknoten.spielbrett)
+            print("Informationen des Zuges: ", k.startZeile, " ", k.startSpalte, " ", k.endZeile, " ", k.endSpalte)
+            print("-----------------------------------------------------------------------------------------------------------------")
+        print("Anzahl der Stellung der Figuren in der vierten Ebene: ", len(self.listeEbene5))
+        
