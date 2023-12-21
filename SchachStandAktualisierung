@@ -1,21 +1,39 @@
-import numpy as np#übernommen
+import numpy as np
+import pygame as p #Eine Bibliothek von Python für die Entwicklung von Multimedia-Anwendungen   
+from typing import Any, List
+import sys
+import copy
 
-class SpielStand():#übernommen 
-    def __init__(self):#übernommen
+class Variablen():
+    def __init__(self):
+        self.breite = 800
+        self.höhe = 512
+        self.bildschirm = p.display.set_mode((self.breite, self.höhe))
+        self.starteSpiel = False
+        self.starteSpiel2 = False
+        self.vsKI = False
+        self.vsMensch = False
+        self.markierungenLöschen = False
+
+class SpielStand(): 
+    def __init__(self):
         
-        self.spielbrett = [#übernommen
-                        ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],#übernommen
-                        ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],#übernommen
-                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
-                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
-                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
-                        ["--", "--", "--", "--", "--", "--", "--", "--"],#übernommen
-                        ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],#übernommen
-                        ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]#übernommen
-                    ]#übernommen
+        np.set_printoptions(threshold=sys.maxsize)
+        #Verschachteltes Array, in dem Array mit Stirngs sind. Diese String repräsentieren die Figur auf dem jeweiligen Feld
+        self.spielbrett =   np.array([   
+                                        ["sT", "sP", "sL", "sD", "sK", "sL", "sP", "sT"],
+                                        ["sB", "sB", "sB", "sB", "sB", "sB", "sB", "sB"],
+                                        ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                        ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                        ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                        ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                        ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],
+                                        ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]
+                                    ])  
+                    
         '''
-        ["--", "--", "--", "gD", "--", "--", "--", "--"], Diese beiden Blöcke im Kommentar dienen zu testzwecken
-        ["--", "--", "--", "--", "--", "--", "--", "--"], die Tore schneller Testen kann.
+        ["--", "--", "--", "sD", "--", "--", "--", "--"], 
+        ["--", "--", "--", "--", "--", "--", "--", "--"], 
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -23,8 +41,8 @@ class SpielStand():#übernommen
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "wD", "--", "--", "--", "--"] 
 
-        ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],
-        ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],
+        ["sT", "sP", "sL", "sD", "sK", "sL", "sP", "sT"],
+        ["sB", "sB", "sB", "sB", "sB", "sB", "sB", "sB"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
         ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -33,248 +51,597 @@ class SpielStand():#übernommen
         ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]
 
         '''
-        self.zugWeiß = True#übernommen
+        self.zugWeiß = True #Es wird bestimmt, welcher Spieler den Zug machen muss.
 
-        self.neueFigurFürBauern = False
+        self.neueFigurFürBauernHilf = False     #40-44: Dieser Block wird gebraucht, um den Bauern gegen eine neue Figur eintauschen zu können, sobald die 
+        self.neueFigurFürBauern = False         #notwendigen Bedingungen dafür erfüllt sind.
+        self.neueFigur = ""
+        self.zeileNeueFigur = 0
+        self.spalteNeueFigur = 0
 
-        self.rochadeKleinWeiß = False
+        self.rochadeKleinWeiß = False           #46-49: Falls eine Rochade ausgeführt werden kann, wird dies in der zugehörigen Variable festgehalten
         self.rochadeGroßWeiß = False
         self.rochadeKleinSchwarz = False
         self.rochadeGroßSchwarz = False
 
-        self.TurmWeißLinksBenutzt = False
-        self.TurmWeißRechtsBenutzt = False
+        self.TurmWeißLinksBenutzt = False       #51-56: Falls der Turm oder der König benutzt wurden, kann keine Rochade gemacht werden. 
+        self.TurmWeißRechtsBenutzt = False      #Falls der Turm oder der König benutzt werden, wird dies durch eine Variable festgehalten
         self.TurmSchwarzLinksBenutzt = False
         self.TurmSchwarzRechtsBenutzt = False
         self.KönigWeißBenutzt = False
         self.KönigSchwarzBenutzt = False
 
-        self.enPassantFelderFürBauerWeiß = []
-        self.enPassantFürBauerWeiß = False
-        self.enPassantFelderFürBauerSchwarz = []
+        self.enPassantFelderFürBauerWeiß = np.array([])   #58-61: Die Figuren, die einen en passant ausführen können, werden in einem Array abgespeichert, weil
+        self.enPassantFürBauerWeiß = False      #es mehrere Figuren geben könnte, die nacheinander einen en passant ausführen können.
+        self.enPassantFürBauerWeißKI = False
+        self.enPassantFelderFürBauerSchwarz = np.array([])
         self.enPassantFürBauerSchwarz = False
+        self.enPassantFürBauerSchwarzKI = False
 
-        self.ToreWeiß = 0
+        self.ToreWeiß = 0                       #63-64: Die Tore von Weiß und von Schwarz werden gezählt
         self.ToreSchwarz = 0
-        self.Tor = False
 
-        self.anzahlFigurenWeiß = 16
-        self.anzahlFigurenSchwarz = 16
+        self.anzahlFigurenWeiß = 16              #66-68: Die Anzahl der Figuren zu Beginn des Spiels wird festgehalten, damit sie bei einem Tor oder bei einem 
+        self.anzahlFigurenSchwarz = 16           #Schlag durch eine gegnerische Figur heruntergezählt werden können.
 
-        self.spielBeendet = False
-
-        self.torFigurschlagBauernzugAnzahl = 0
-        self.tor = False
-        self.bauernzug = False
+        self.torFigurschlagBauernzugAnzahl = 0  #69-72: Es wird gezählt, wie viele Züge es gegeben hat, bei dem kein Tor gemacht wurde, kein Bauer bewegt wurde
+        self.tor = False                        #und bei dem keine gegnerische Figur geschlagen wurde, wird das Spiel beendet und anhand des Punktestandes entschieden
+        self.bauernzug = False                  #Sobald 100 von diesen nacheinander gemacht wurden, wird das Spiel beendet.
         self.figurSchlag = False
 
-        self.starteOderBeendeSpiel = ''
+        self.starteOderBeendeSpiel = ''         #Diese Variable wird durch die Taste auf der Spieloberfläche festgelegt. Wenn man auf die Taste Neustart klickt
+        self.spielBeendet = False               #wird es auf j gesetzt, dann wird das Spiel neugestartet. Wenn man auf die Taste Beenden klickt, wird es auf 
+        self.startKIOderMensch = False           #n gesetzt, dann wird das Spiel beendet, die Benutzeroberfläche schließt sich.
+        self.startWeißOderSchwarz = True
 
         self.stellungFiguren = np.array([[
-                                            ["gT", "gP", "gL", "gD", "gK", "gL", "gP", "gT"],#Dieser Block wurde übernommen
-                                            ["gB", "gB", "gB", "gB", "gB", "gB", "gB", "gB"],
-                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["sT", "sP", "sL", "sD", "sK", "sL", "sP", "sT"],   #Hier werden die Stellungen der Figuren abgespeichert. 
+                                            ["sB", "sB", "sB", "sB", "sB", "sB", "sB", "sB"],   #Sobald sich die Stellung der Figuren drei Mal wiederholt, wird das Spiel
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],   #beendet. 
                                             ["--", "--", "--", "--", "--", "--", "--", "--"],
                                             ["--", "--", "--", "--", "--", "--", "--", "--"],
                                             ["--", "--", "--", "--", "--", "--", "--", "--"],
                                             ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],
-                                            ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"]
+                                            ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"] 
                                         ]])
 
-        '''
-        ["--", "--", "--", "gD", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "--", "--", "--", "--", "--"],
-        ["--", "--", "--", "wD", "--", "--", "--", "--"] 
-        '''
+        #Hier bekommen die Zeilen und die Spalten Nummern. In einem Dictionary haben wir die klassische Bezeichnung der Zeile und in dem anderen Dictionary drehen 
+        #wir die Werte dann um. Denn durch einen Klick auf ein Feld, müssen wir berechnen können, welches Feld berechnet wurde.
+        #In einem anderen Dictionary haben wir für die Spalten Bchstaben, so wie es klassich beim Schach ist. Diesen Buchstaben sind Zahlen von 0 bis 7 zugeordnet.
+        #Auch dieses Dictionry wird umgedreht, denn im Spiel haben wir oben für den y-Wert den Wert 0 und nach unten hin wird es größer. 
+        #Um berechnen zu können, in welcher Spalte das angeklickte Feld ist, ordnen wir a den Wert Null und dann aufsteigend, bis zum h, den Wert 7 zu.
+        self.rangFürZeilen = {"1" : 7, "2" : 6, "3" : 5, "4" : 4, "5" : 3, "6" : 2, "7" : 1, "8" : 0} 
+        self.zeilenFürRänge = {v: k for k, v in self.rangFürZeilen.items()}
+        self.buchstabenFürSpalten = {"a" : 0, "b" : 1, "c" : 2, "d" : 3, "e" : 4, "f" : 5, "g" : 6, "h" : 7} 
+        self.spaltenFürBuchstaben = {v: k for k, v in self.buchstabenFürSpalten.items()}
 
-        self.rangFürZeilen = {"1" : 7, "2" : 6, "3" : 5, "4" : 4, "5" : 3, "6" : 2, "7" : 1, "8" : 0} #Zeilen #übernommen
-        self.zeilenFürRänge = {v: k for k, v in self.rangFürZeilen.items()}#übernommen
-        self.buchstabenFürSpalten = {"a" : 0, "b" : 1, "c" : 2, "d" : 3, "e" : 4, "f" : 5, "g" : 6, "h" : 7} #Spalten #übernommen
-        self.spaltenFürBuchstaben = {v: k for k, v in self.buchstabenFürSpalten.items()}#übernommen
+        self.startQ = np.array([0,0]) #Hier haben wir die Koordinaten für das Rechteck, das zuerst angeklickt wurde
+        self.endQ = np.array([0,0])   #Hier haben wir die Koordinaten für das Rechteck, das als zweites angeklickt wurde.
 
-        self.startQ = [0,0]#übernommen
-        self.endQ = [0,0]#übernommen
+        self.startZeile = self.startQ[0]    #102-106: Die Startzeile ist die Zeile, indem sich das Rechteck beim ersten Klick befindet.
+        self.startSpalte = self.startQ[1]   #Die darauffolgenden 3 Zeilen erklären sich von selbst.
+        self.endZeile = self.endQ[0]
+        self.endSpalte = self.endQ[1]
+        self.bewegteFigur = self.spielbrett[self.startZeile][self.startSpalte] #Hier wird die Figur gespeichert, die in ein anderes Feld bewegt wird.
 
-        self.startZeile = self.startQ[0]#übernommen
-        self.startSpalte = self.startQ[1]#übernommen
-        self.endZeile = self.endQ[0]#übernommen
-        self.endSpalte = self.endQ[1]#übernommen
-        self.bewegteFigur = self.spielbrett[self.startZeile][self.startSpalte]#übernommen
+        #Die möglichen Folgestellungen einer Stellung werden in dieser Variablen gespeichert.
+        self.möglicheFolgestellung = np.array([                                                 
+                                            ["sT", "sP", "sL", "sD", "sK", "sL", "sP", "sT"], #Hier sehen wir eine Variable, in der 
+                                            ["sB", "sB", "sB", "sB", "sB", "sB", "sB", "sB"], #eine einzige Folgestellung abgespeichert
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"], #die durch einen möglichen Zug entstehen
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"], #könnte.
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["--", "--", "--", "--", "--", "--", "--", "--"],
+                                            ["wB", "wB", "wB", "wB", "wB", "wB", "wB", "wB"],
+                                            ["wT", "wP", "wL", "wD", "wK", "wL", "wP", "wT"] 
+                                        ])
+        
+        self.idHilf = 0
+        self.punkte = 0
+        self.möglicheFolgeStellungFürKI = False
+        self.aktualisiereFeldFürNeueFigurFürBauern = False
+        self.positionenMitte1 = ((5,2), (5,3), (5,4), (5,5), (4,2), (3,2), (2,2), (2,3), (2,4), (2,5), (3,5), (4,5))
+        self.positionenMitte2 = ((4,3), (3,3), (3,4), (4,4))
 
-    def definiereZugAttribute(self, startZeile, startSpalte, endZeile, endSpalte, bewegteFigur):#übernommen
-        self.startZeile = startZeile#übernommen
-        self.startSpalte = startSpalte#übernommen
-        self.endZeile = endZeile#übernommen
-        self.endSpalte = endSpalte#übernommen
-        self.bewegteFigur = bewegteFigur#übernommen
+        self.elternknoten: SpielStand = None
+        self.kinder: List[SpielStand] = []
 
-    def macheZug(self): 
-        #print("neueFigurFürBauern: ", self.neueFigurFürBauern)
-        if self.endZeile == 0 and self.endSpalte == 3 and not self.neueFigurFürBauern: 
-            #print("Test1")
+        self.rochadeKleinWeißKIHilf = False
+        self.rochadeGroßWeißKIHilf = False
+        self.rochadeKleinSchwarzKIHilf = False
+        self.rochadeGroßSchwarzKIHilf = False
+
+        self.alpha: int = 0
+        self.beta: int = 0
+
+        self.punkteDurchFigurenWeiß: int = 0
+        self.punkteDurchFigurenSchwarz: int = 0
+
+        self.löscheMarkierungen = False
+        self.löscheMarkierungenRochade = False
+        self.zlm = []
+        self.zzf = []
+
+        self.löscheBauern = ()
+
+    def setzeStellungDerFiguren(self, stellungDerFiguren):
+        self.stellungFiguren = stellungDerFiguren
+
+    def kopiereSpielStand(self):
+        sp = SpielStand()
+        sp.spielbrett = copy.copy(self.spielbrett)
+        sp.zugWeiß = self.zugWeiß
+        sp.neueFigurFürBauernHilf = self.neueFigurFürBauernHilf
+        sp.neueFigurFürBauern = self.neueFigurFürBauern
+        sp.neueFigur = self.neueFigur
+        sp.zeileNeueFigur = self.zeileNeueFigur
+        sp.spalteNeueFigur = self.spalteNeueFigur
+        sp.rochadeKleinWeiß = self.rochadeKleinWeiß
+        sp.rochadeGroßWeiß = self.rochadeGroßWeiß
+        sp.rochadeKleinSchwarz = self.rochadeKleinSchwarz
+        sp.rochadeGroßSchwarz = self.rochadeGroßSchwarz
+        sp.TurmWeißLinksBenutzt = self.TurmWeißLinksBenutzt
+        sp.TurmWeißRechtsBenutzt = self.TurmWeißRechtsBenutzt
+        sp.TurmSchwarzLinksBenutzt = self.TurmSchwarzLinksBenutzt
+        sp.TurmSchwarzRechtsBenutzt = self.TurmSchwarzRechtsBenutzt
+        sp.KönigWeißBenutzt = self.KönigWeißBenutzt
+        sp.KönigSchwarzBenutzt = self.KönigSchwarzBenutzt
+        sp.enPassantFelderFürBauerWeiß = copy.copy(self.enPassantFelderFürBauerWeiß)
+        sp.enPassantFürBauerWeiß = self.enPassantFürBauerWeiß
+        sp.enPassantFelderFürBauerSchwarz = copy.copy(self.enPassantFelderFürBauerSchwarz)
+        sp.enPassantFürBauerSchwarz = self.enPassantFürBauerSchwarz
+        sp.ToreWeiß = self.ToreWeiß
+        sp.ToreSchwarz = self.ToreSchwarz
+        sp.anzahlFigurenWeiß = self.anzahlFigurenWeiß
+        sp.anzahlFigurenSchwarz = self.anzahlFigurenSchwarz
+        sp.torFigurschlagBauernzugAnzahl = self.torFigurschlagBauernzugAnzahl
+        sp.tor = self.tor
+        sp.bauernzug = self.bauernzug
+        sp.figurSchlag = self.figurSchlag
+        sp.starteOderBeendeSpiel = self.starteOderBeendeSpiel
+        sp.spielBeendet = self.spielBeendet
+        sp.startKIOderMensch = self.startKIOderMensch
+        sp.stellungFiguren = copy.copy(self.stellungFiguren)
+        sp.rangFürZeilen = self.rangFürZeilen
+        sp.zeilenFürRänge = self.zeilenFürRänge
+        sp.buchstabenFürSpalten = self.buchstabenFürSpalten 
+        sp.spaltenFürBuchstaben = self.spaltenFürBuchstaben
+        sp.startQ = copy.copy(self.startQ)
+        sp.endQ = copy.copy(self.endQ)
+        sp.startZeile = self.startZeile
+        sp.startSpalte = self.startSpalte
+        sp.endZeile = self.endZeile
+        sp.endSpalte = self.endSpalte
+        sp.bewegteFigur = self.bewegteFigur
+        sp.möglicheFolgestellung = self.möglicheFolgestellung
+        sp.idHilf = self.idHilf
+        sp.punkte = self.punkte
+        sp.möglicheFolgeStellungFürKI = True
+        sp.aktualisiereFeldFürNeueFigurFürBauern = self.aktualisiereFeldFürNeueFigurFürBauern
+        sp.positionenMitte1 = self.positionenMitte1
+        sp.positionenMitte2 = self.positionenMitte2
+        sp.elternknoten = None
+        sp.kinder : List[SpielStand] = []
+        sp.rochadeKleinWeißKIHilf = self.rochadeKleinWeißKIHilf
+        sp.rochadeGroßWeißKIHilf = self.rochadeGroßWeißKIHilf
+        sp.rochadeKleinSchwarzKIHilf = self.rochadeKleinSchwarzKIHilf
+        sp.rochadeGroßSchwarzKIHilf = self.rochadeGroßSchwarzKIHilf
+        sp.alpha = self.alpha
+        sp.beta = self.beta
+        sp.punkteDurchFigurenWeiß = copy.copy(self.punkteDurchFigurenWeiß)
+        sp.punkteDurchFigurenSchwarz = copy.copy(self.punkteDurchFigurenSchwarz)
+        sp.zlm = copy.copy(self.zlm)
+        sp.löscheMarkierungen = self.löscheMarkierungen
+        sp.zzf = copy.copy(self.zzf)
+        sp.löscheMarkierungenRochade = self.löscheMarkierungenRochade
+        sp.löscheBauern = copy.copy(self.löscheBauern)
+
+        return sp
+
+    def führeMöglichenZugAus(self, figur, startPosition, endPosition):
+        if self.neueFigurFürBauernHilf:
+    
+            self.neueFigur = figur
+            self.definiereZugAttribute(startPosition[0], startPosition[1], endPosition[0], endPosition[1], figur)
+            self.macheZug()
+    
+        else:
+            self.definiereZugAttribute(startPosition[0], startPosition[1], endPosition[0], endPosition[1], figur)
+            self.macheZug()
+            if self.möglicheFolgeStellungFürKI:
+                if figur == 'wB' and startPosition[0] == 1 and endPosition[0] == 0:
+                    self.zugWeiß = not self.zugWeiß
+                elif figur == 'sB' and startPosition[0] == 6 and endPosition[0] == 7:
+                    self.zugWeiß = not self.zugWeiß
+
+    def definiereZugAttribute(self, startZeile, startSpalte, endZeile, endSpalte, bewegteFigur): #Diese Methode wird in der Main-Methode aufgerufen, hier werden die
+        self.startZeile = startZeile    #notwendigen Attribute aktualisiert.
+        self.startSpalte = startSpalte
+        self.endZeile = endZeile
+        self.endSpalte = endSpalte
+        self.bewegteFigur = bewegteFigur
+
+    def macheZug(self): #Hier wird der Zug ausgeführt
+        
+        if self.endZeile == 0 and self.endSpalte == 3 or self.endZeile == 0 and self.endSpalte == 4: #Es wird kontrolliert, ob ein Tor gemacht wurde.
+            
             if self.zugWeiß:
-                self.ToreWeiß += 1
+                self.ToreWeiß += 1#Weiß ist drann, es wurde ein Tor gemacht
                 self.tor = True
 
-                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'g':
+                if self.anzahlFigurenSchwarz > 1:
+
+                    #if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein vorher: ", self.punkte)
+                    #    pass
+                    #if self.bewegteFigur[1] == 'B':
+                    #    self.punkteDurchFigurenWeiß -= 1000
+                    #elif self.bewegteFigur[1] == 'K':
+                    #    self.punkteDurchFigurenWeiß -= 2000
+                    #elif self.bewegteFigur[1] == 'P':
+                    #    self.punkteDurchFigurenWeiß -= 4000
+                    #elif self.bewegteFigur[1] == 'T':
+                    #    self.punkteDurchFigurenWeiß -= 6000
+                    #elif self.bewegteFigur[1] == 'L':
+                    #    self.punkteDurchFigurenWeiß -= 6000
+                    #elif self.bewegteFigur[1] == 'D':
+                    #    self.punkteDurchFigurenWeiß -= 10000
+                    #if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein nachher: ", self.punkte)
+                    #    pass
+
+                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                        self.punkteDurchFigurenSchwarz -= 500
+                        self.punkteDurchFigurenWeiß += 500
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                        self.punkteDurchFigurenSchwarz -= 1000
+                        self.punkteDurchFigurenWeiß += 1000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                        self.punkteDurchFigurenSchwarz -= 2000
+                        self.punkteDurchFigurenWeiß += 2000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                        self.punkteDurchFigurenSchwarz -= 10000
+                        self.punkteDurchFigurenWeiß += 10000
+                    
+                    if self.bewegteFigur[1] == 'B' and self.spielbrett[self.endZeile][self.endSpalte] == '--':
+                        self.punkteDurchFigurenWeiß += 500
+                    elif self.bewegteFigur[1] == 'K':
+                        self.punkteDurchFigurenWeiß -= 1000
+                    elif self.bewegteFigur[1] == 'P':
+                        self.punkteDurchFigurenWeiß -= 2000
+                    elif self.bewegteFigur[1] == 'T':
+                        self.punkteDurchFigurenWeiß -= 3000
+                    elif self.bewegteFigur[1] == 'L':
+                        self.punkteDurchFigurenWeiß -= 3000
+                    elif self.bewegteFigur[1] == 'D':
+                        self.punkteDurchFigurenWeiß -= 10000
+
+                else:
+
+                    #if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein vorher: ", self.punkte)
+                    #    pass
+                    if self.bewegteFigur[1] == 'B':
+                        self.punkteDurchFigurenWeiß += 500
+                    elif self.bewegteFigur[1] == 'K':
+                        self.punkteDurchFigurenWeiß += 1000
+                    elif self.bewegteFigur[1] == 'P':
+                        self.punkteDurchFigurenWeiß += 2000
+                    elif self.bewegteFigur[1] == 'T':
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.bewegteFigur[1] == 'L':
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.bewegteFigur[1] == 'D':
+                        self.punkteDurchFigurenWeiß += 10000
+                    #if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein nachher: ", self.punkte)
+                    #    pass
+
+                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 's': #Beim Tor wurde eine schwarze Figur geschlagen
                     self.anzahlFigurenSchwarz -= 1
                     self.figurSchlag = True
-                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
-
-                self.spielbrett[self.endZeile][self.endSpalte] = '--'#übernommen
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"#übernommen Diese Zeilen kommen im Code sehr oft vor und werden nicht immer gekennzeichnet werden.
+                    
+                self.spielbrett[self.endZeile][self.endSpalte] = '--' #Hier wird das Spielbrett aktualisiert
+                self.spielbrett[self.startZeile][self.startSpalte] = '--'
                 self.anzahlFigurenWeiß -= 1
-                self.figurSchlag = True
-                print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
             
             else:
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                
+                self.spielbrett[self.startZeile][self.startSpalte] = '--' #Eine schwarze Figur begibt sich in das eigene Tor.
                 self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
 
-        elif self.endZeile == 0 and self.endSpalte == 4 and not self.rochadeGroßSchwarz and not self.rochadeKleinSchwarz and not self.neueFigurFürBauern: #Tor
-            #print("Test2")
-            if self.zugWeiß:
-                self.ToreWeiß += 1
-                self.tor = True
-
-                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'g':
-                    self.anzahlFigurenSchwarz -= 1
-                    self.figurSchlag = True
-                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
-
-                print("Tore Weiß: ", self.ToreWeiß)
-                self.spielbrett[self.endZeile][self.endSpalte] = '--'
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
-                self.anzahlFigurenWeiß -= 1
-                self.figurSchlag = True
-                print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
-
-            else:
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
-                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
-
-        elif self.startZeile != 0 and self.endZeile == 7 and self.endSpalte == 3 and not self.neueFigurFürBauern: #Tor
-            #print("Test3")
-            if not self.zugWeiß:
-                self.ToreSchwarz += 1
-                self.figurSchlag = True
-                self.tor = True
-
-                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'w':
-                    self.anzahlFigurenWeiß -= 1
-                    self.figurSchlag = True
-                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
-
-                print("Tore Schwarz: ", self.ToreSchwarz)
-                self.spielbrett[self.endZeile][self.endSpalte] = '--'
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
-                self.anzahlFigurenSchwarz -= 1
-                self.figurSchlag = True
-                print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
-
-            else:
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
-                self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
-
-        elif self.endZeile == 7 and self.endSpalte == 4 and not self.rochadeGroßWeiß and not self.rochadeKleinWeiß and not self.neueFigurFürBauern: #Tor
-            #print("Test4")
+        elif self.endZeile == 7 and self.endSpalte == 3 or self.endZeile == 7 and self.endSpalte == 4: #Hier wird kontrolliert, ob Schwarz ein Tor gemacht hat.
+            
             if not self.zugWeiß:
                 self.ToreSchwarz += 1
                 self.tor = True
 
+                if self.anzahlFigurenWeiß > 1:
+
+                    if self.möglicheFolgeStellungFürKI == False:
+                        pass
+                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
+                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                        self.punkteDurchFigurenWeiß -= 500
+                        self.punkteDurchFigurenSchwarz += 500
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                        self.punkteDurchFigurenWeiß -= 1000
+                        self.punkteDurchFigurenSchwarz += 1000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                        self.punkteDurchFigurenWeiß -= 2000
+                        self.punkteDurchFigurenSchwarz += 2000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                        self.punkteDurchFigurenWeiß -= 3000
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                        self.punkteDurchFigurenWeiß -= 3000
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                        self.punkteDurchFigurenWeiß -= 10000
+                        self.punkteDurchFigurenSchwarz += 10000
+                    
+                    if self.bewegteFigur[1] == 'B' and self.spielbrett[self.endZeile][self.endSpalte] == '--':
+                        self.punkteDurchFigurenSchwarz += 500
+                    elif self.bewegteFigur[1] == 'K':
+                        self.punkteDurchFigurenSchwarz -= 1000
+                    elif self.bewegteFigur[1] == 'P':
+                        self.punkteDurchFigurenSchwarz -= 2000
+                    elif self.bewegteFigur[1] == 'T':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                    elif self.bewegteFigur[1] == 'L':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                    elif self.bewegteFigur[1] == 'D':
+                        self.punkteDurchFigurenSchwarz -= 10000
+
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
+                        pass
+
+                else:
+
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
+                        pass
+                    if self.bewegteFigur[1] == 'B':
+                        self.punkteDurchFigurenSchwarz += 500
+                    elif self.bewegteFigur[1] == 'K':
+                        self.punkteDurchFigurenSchwarz += 1000
+                    elif self.bewegteFigur[1] == 'P':
+                        self.punkteDurchFigurenSchwarz += 2000
+                    elif self.bewegteFigur[1] == 'T':
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.bewegteFigur[1] == 'L':
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.bewegteFigur[1] == 'D':
+                        self.punkteDurchFigurenSchwarz += 10000
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
+                        pass
+
+            
                 if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'w':
                     self.anzahlFigurenWeiß -= 1
                     self.figurSchlag = True
-                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
 
-                print("Tore Schwarz: ", self.ToreSchwarz)
+                if self.möglicheFolgeStellungFürKI == False:
+                    print("Anzahl Figuren: ", self.anzahlFigurenSchwarz)
                 self.spielbrett[self.endZeile][self.endSpalte] = '--'
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.startZeile][self.startSpalte] = '--'
                 self.anzahlFigurenSchwarz -= 1
-                self.figurSchlag = True
-                print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+    
+                if self.möglicheFolgeStellungFürKI == False:
+                    print("Anzahl Figuren: ", self.anzahlFigurenSchwarz)
+                    
 
             else:
-                self.spielbrett[self.startZeile][self.startSpalte] = "--"
+                self.spielbrett[self.startZeile][self.startSpalte] = '--'
                 self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
 
-        elif self.enPassantFürBauerWeiß:
-            #print("Test5")
-            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+        elif self.enPassantFürBauerWeiß: #Der En-Passant-Zug des Bauern wird ausgeführt
+
+            if self.möglicheFolgeStellungFürKI:
+                self.enPassantFürBauerWeiß = False
             self.spielbrett[self.endZeile+1][self.endSpalte] = '--'
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
             self.spielbrett[self.startZeile][self.startSpalte] = '--'
-            self.enPassantFürBauerWeiß = False
             self.anzahlFigurenSchwarz -= 1
             self.figurSchlag = True
-            self.enPassantFürBauerWeiß = False
-            print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+            self.enPassantFelderFürBauerWeiß = np.array([]) 
 
-        elif self.enPassantFürBauerSchwarz:
-            #print("Test6")
+        elif self.enPassantFürBauerSchwarz:#Der En-Passant-Zug des Bauern wird ausgeführt
+
+            if self.möglicheFolgeStellungFürKI:
+                self.enPassantFürBauerSchwarz = False
             self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
             self.spielbrett[self.endZeile-1][self.endSpalte] = '--'
             self.spielbrett[self.startZeile][self.startSpalte] = '--'
-            self.enPassantFürBauerSchwarz = False
             self.anzahlFigurenWeiß -= 1
             self.figurSchlag = True
-            self.enPassantFürBauerSchwarz = False
-            print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
+            self.enPassantFelderFürBauerSchwarz = np.array([]) 
+        
+        elif self.neueFigurFürBauern:#Der Bauer bekommt eine neue Figur
+        
+            self.spielbrett[self.zeileNeueFigur][self.spalteNeueFigur] = self.neueFigur
+            self.neueFigurFürBauern = False
+            self.aktualisiereFeldFürNeueFigurFürBauern = True
+            self.bepunkteDieNeueFigur(self.neueFigur)
+            
+        elif self.neueFigurFürBauernHilf:#Der Austausch des Bauern mit einer anderen Figur in der nächsten Aktualisierung wird hier vorbereitet
+            
+            if self.möglicheFolgeStellungFürKI:
+                self.neueFigurFürBauernHilf = False
+                self.spielbrett[self.startZeile][self.startSpalte] = '--'
+                self.spielbrett[self.endZeile][self.endSpalte] =  self.neueFigur
+                self.bepunkteDieNeueFigur(self.neueFigur)
+        
+            else:
+                
+                self.neueFigurFürBauernHilf = False
+                self.neueFigurFürBauern = True
+                self.spielbrett[self.startZeile][self.startSpalte] = '--'
+                self.spielbrett[self.endZeile][self.endSpalte] =  self.bewegteFigur
+                self.zeileNeueFigur = self.endZeile
+                self.spalteNeueFigur = self.endSpalte
 
-        elif self.neueFigurFürBauern:
-            #print("Test7")
-            if self.spielbrett[self.endZeile][self.endSpalte][:1] == self.spielbrett[self.startZeile][self.startSpalte][:1]:
-                print("Bin drin!")
-                self.spielbrett[self.startZeile][self.startSpalte] = self.spielbrett[self.endZeile][self.endSpalte]
-
-        elif self.rochadeKleinWeiß:
-            #print("Test8")
+        elif self.rochadeKleinWeiß:#Der Turm und der König werden an ihre richtige Position gebracht, durch die Rochade
+            
             self.spielbrett[7][6] = self.spielbrett[7][4]
             self.spielbrett[7][4] = '--'
             self.spielbrett[7][5] = self.spielbrett[7][7]
             self.spielbrett[7][7] = '--'
+        
+        elif self.rochadeKleinWeißKIHilf and (((self.startZeile, self.startSpalte) == (7,4)) and ((self.endZeile, self.endSpalte) == (7,6))):
+            
+            self.spielbrett[7][6] = self.spielbrett[7][4]
+            self.spielbrett[7][4] = '--'
+            self.spielbrett[7][5] = self.spielbrett[7][7]
+            self.spielbrett[7][7] = '--'
+            self.KönigWeißBenutzt = True
+            self.TurmWeißRechtsBenutzt = True
+            self.rochadeKleinWeißKIHilf = False
 
-        elif self.rochadeGroßWeiß:
-            #print("Test9")
+        elif self.rochadeGroßWeiß:#Der Turm und der König werden an ihre richtige Position gebracht, durch die Rochade
+        
             self.spielbrett[7][2] = self.spielbrett[7][4]
             self.spielbrett[7][4] = '--'
             self.spielbrett[7][3] = self.spielbrett[7][0]
             self.spielbrett[7][0] = '--'
 
-        elif self.rochadeKleinSchwarz:
-            #print("Test10")
+        elif self.rochadeGroßWeißKIHilf and (self.startZeile, self.startSpalte) == (7,4) and (self.endZeile, self.endSpalte) == (7,2):
+            
+            self.spielbrett[7][2] = self.spielbrett[7][4]
+            self.spielbrett[7][4] = '--'
+            self.spielbrett[7][3] = self.spielbrett[7][0]
+            self.spielbrett[7][0] = '--'
+            self.KönigWeißBenutzt = True
+            self.TurmWeißLinksBenutzt = True
+            self.rochadeGroßWeißKIHilf = False
+
+        elif self.rochadeKleinSchwarz:#Der Turm und der König werden an ihre richtige Position gebracht, durch die Rochade
+           
             self.spielbrett[0][6] = self.spielbrett[0][4]
             self.spielbrett[0][4] = '--'
             self.spielbrett[0][5] = self.spielbrett[0][7]
             self.spielbrett[0][7] = '--'
 
-        elif self.rochadeGroßSchwarz:
-            #print("Test11")
+        elif self.rochadeKleinSchwarzKIHilf and (self.startZeile, self.startSpalte) == (0,4) and (self.endZeile, self.endSpalte) == (0,6):
+            
+            self.spielbrett[0][6] = self.spielbrett[0][4]
+            self.spielbrett[0][4] = '--'
+            self.spielbrett[0][5] = self.spielbrett[0][7]
+            self.spielbrett[0][7] = '--'
+            self.KönigSchwarzBenutzt = True
+            self.TurmSchwarzRechtsBenutzt = True
+            self.rochadeKleinSchwarzKIHilf = False
+
+        elif self.rochadeGroßSchwarz:#Der Turm und der König werden an ihre richtige Position gebracht, durch die Rochade
+            
             self.spielbrett[0][2] = self.spielbrett[0][4]
             self.spielbrett[0][4] = '--'
             self.spielbrett[0][3] = self.spielbrett[0][0]
             self.spielbrett[0][0] = '--'
 
+        elif self.rochadeGroßSchwarzKIHilf and (self.startZeile, self.startSpalte) == (0,4) and (self.endZeile, self.endSpalte) == (0,2):
+            
+            self.spielbrett[0][2] = self.spielbrett[0][4]
+            self.spielbrett[0][4] = '--'
+            self.spielbrett[0][3] = self.spielbrett[0][0]
+            self.spielbrett[0][0] = '--'
+            self.KönigSchwarzBenutzt = True
+            self.TurmSchwarzLinksBenutzt = True
+            self.rochadeGroßSchwarzKIHilf = False
+
         else:
-            #print("Test12")
-            if self.zugWeiß:
-                if not self.spielbrett[self.endZeile][self.endSpalte] == "--":
+    
+            if self.zugWeiß:#Hier haben wir den Fall, dass eine gegnerische Figur geschlagen wird
+
+                self.enPassantFürBauerWeiß = False
+                self.enPassantFelderFürBauerWeiß = np.array([])
+
+                if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
                     self.anzahlFigurenSchwarz -= 1
                     self.figurSchlag = True
-                    print("Anzahl Figuren Schwarz: ", self.anzahlFigurenSchwarz)
+
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
+                        pass
+                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                        self.punkteDurchFigurenSchwarz -= 500
+                        self.punkteDurchFigurenWeiß += 500
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                        self.punkteDurchFigurenSchwarz -= 1000
+                        self.punkteDurchFigurenWeiß += 1000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                        self.punkteDurchFigurenSchwarz -= 2000
+                        self.punkteDurchFigurenWeiß += 2000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                        self.punkteDurchFigurenSchwarz -= 3000
+                        self.punkteDurchFigurenWeiß += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                        self.punkteDurchFigurenSchwarz -= 10000
+                        self.punkteDurchFigurenWeiß += 10000
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
+                        pass
+
             else:
-                if not self.spielbrett[self.endZeile][self.endSpalte] == "--":
+
+                self.enPassantFürBauerSchwarz = False
+                self.enPassantFelderFürBauerSchwarz = np.array([])
+
+                if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
                     self.anzahlFigurenWeiß -= 1
                     self.figurSchlag = True
-                    print("Anzahl Figuren Weiß: ", self.anzahlFigurenWeiß)
 
-            self.spielbrett[self.startZeile][self.startSpalte] = "--"#übernommen
-            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur#übernommen
-    
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß)
+                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
+                        pass
+                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                        self.punkteDurchFigurenWeiß -= 500
+                        self.punkteDurchFigurenSchwarz += 500
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                        self.punkteDurchFigurenWeiß -= 1000
+                        self.punkteDurchFigurenSchwarz += 1000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                        self.punkteDurchFigurenWeiß -= 2000
+                        self.punkteDurchFigurenSchwarz += 2000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                        self.punkteDurchFigurenWeiß -= 3000
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                        self.punkteDurchFigurenWeiß -= 3000
+                        self.punkteDurchFigurenSchwarz += 3000
+                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                        self.punkteDurchFigurenWeiß -= 10000
+                        self.punkteDurchFigurenSchwarz += 10000
+                    if self.möglicheFolgeStellungFürKI == False:
+                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß)
+                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
+                        pass
+
+            
+            self.spielbrett[self.startZeile][self.startSpalte] = '--'
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
+            
+            
+            if self.bewegteFigur == 'sB' and self.startZeile == 1 and self.endZeile == 3:
+                self.punkteDurchFigurenSchwarz += 1
+                self.punkteDurchFigurenWeiß -= 1
+            elif self.bewegteFigur == 'wB' and self.startZeile == 6 and self.endZeile == 4:
+                self.punkteDurchFigurenWeiß += 1
+                self.punkteDurchFigurenSchwarz -= 1
+
+            #Hier wird kontrolliert, ob der Turm oder ob der König benutzt wurden. Dies ist wichtig für die Rochade
             if self.startZeile == 7 and self.startSpalte == 0:
                 self.TurmWeißLinksBenutzt = True
             elif self.startZeile == 7 and self.startSpalte == 7:
@@ -288,29 +655,31 @@ class SpielStand():#übernommen
             elif self.startZeile == 0 and self.startSpalte == 4:
                 self.KönigSchwarzBenutzt = True
 
-        if self.anzahlFigurenSchwarz == 0:
-            self.ToreWeiß += self.anzahlFigurenWeiß
+        if self.anzahlFigurenSchwarz == 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es 
+            
+            self.ToreWeiß += self.anzahlFigurenWeiß #auf dem Feld noch hat
             self.spielBeendet = True
 
-        elif self.anzahlFigurenWeiß == 0:
-            self.ToreSchwarz += self.anzahlFigurenSchwarz
+        elif self.anzahlFigurenWeiß == 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es
+            
+            self.ToreSchwarz += self.anzahlFigurenSchwarz #auf dem Feld noch hat
             self.spielBeendet = True
 
-        if self.neueFigurFürBauern:
-            self.neueFigurFürBauern = False
-            self.zugWeiß = not self.zugWeiß
-        if self.rochadeKleinWeiß:
-            self.rochadeKleinWeiß = False
-        elif self.rochadeGroßWeiß:
-            self.rochadeGroßWeiß = False
-        elif self.rochadeKleinSchwarz:
-            self.rochadeKleinSchwarz = False
-        elif self.rochadeGroßSchwarz:
-            self.rochadeGroßSchwarz = False  
-        elif self.Tor:
-            self.Tor = False    
+        #Die Rochade kann nur ein Mal ausgeführt werden, somit darf der Wahrheitswert der Variablen rochadeKleinWeiß nur ein Mal auf True gesetzt werden
+        #Ansonsten könnte es sein, dass der Code in der zugehörigen Bedingung erneut ausgeführt.
+
+        if self.möglicheFolgeStellungFürKI:
+            if self.rochadeKleinWeiß:
+                self.rochadeKleinWeiß = False
+            elif self.rochadeGroßWeiß:
+                self.rochadeGroßWeiß = False
+            elif self.rochadeKleinSchwarz:
+                self.rochadeKleinSchwarz = False
+            elif self.rochadeGroßSchwarz:
+                self.rochadeGroßSchwarz = False      
        
-        if (not self.tor) and (not self.bauernzug) and (not self.figurSchlag):
+        #Hier wird kontrolliert, ob ein Tor gemacht, ein Bauer gezogen oder eine gegnerische Figur geschlagen wurde. Falls 100 von solchen Zügen nacheinander passieren,
+        if (not self.tor) and (not self.bauernzug) and (not self.figurSchlag): #wird das Spiel mit dem aktuellen Spielstand beendet.
             self.torFigurschlagBauernzugAnzahl += 1
 
             if self.torFigurschlagBauernzugAnzahl == 100:
@@ -318,11 +687,14 @@ class SpielStand():#übernommen
         else:
             self.torFigurschlagBauernzugAnzahl = 0
 
-        self.tor = False
-        self.bauernzug = False
-        self.figurSchlag = False     
-        self.stellungFiguren = np.append(self.stellungFiguren, np.array([self.spielbrett]), axis=0)
+        #Für die Kontrolle im nächsten Zug werden diese Werte auf False gesetzt
+        if self.möglicheFolgeStellungFürKI:
+            self.tor = False
+            self.bauernzug = False
+            self.figurSchlag = False     
 
+        #Die Stellung der Figuren werden in einem Array gespeichert, um zu kontrollieren, ob sich die Stellung der Figuren drei Mal wiederholt.
+        self.stellungFiguren = np.append(self.stellungFiguren, np.array([self.spielbrett]), axis=0)
         for i, x in enumerate(self.stellungFiguren):
             m = i
             zaehleW = 0
@@ -334,31 +706,288 @@ class SpielStand():#übernommen
                     if a.all() == True:
                         zaehleW += 1
                         if zaehleW == 3:
-                            print("Diese Stellung der Figuren wiederholt sich zum dritten Mal!")        
-                            print("Das Spiel wird durch den Punktestand entschieden!") 
+                            #print("Diese Stellung der Figuren wiederholt sich zum dritten Mal!")        
+                            #print("Das Spiel wird durch den Punktestand entschieden!") 
                             self.spielBeendet = True
                             break
             zaehleW = 0
+
+        
+        if not self.neueFigurFürBauern:
+            self.zugWeiß = not self.zugWeiß #Nachdem der Zug ausgeführt wurde, wird festgelegt, dass der andere Spieler dran ist.
+
+        #Falls es keine Zugmöglichkeit mehr gibt, wird das Spiel beendet.
+        if self.kontrolliereZugMöglichkeit() == False:
+            self.spielBeendet = True
+
+        if self.zugWeiß == True and not self.bewegteFigur[0] == 's':     #Schwarz hat einen Zug gemacht
+            if (self.endZeile, self.endSpalte) in self.positionenMitte1:
+                self.punkte += 4
+            elif (self.endZeile, self.endSpalte) in self.positionenMitte2:
+                self.punkte += 6
+        elif self.zugWeiß == False and not self.bewegteFigur[0] == 'w':  #Weiß hat einen Zug gemacht
+            if (self.endZeile, self.endSpalte) in self.positionenMitte1:
+                self.punkte -= 4
+            elif (self.endZeile, self.endSpalte) in self.positionenMitte2:
+                self.punkte -= 6
+
+
+    def bepunkteDieNeueFigur(self, neueFigur):
     
+        if self.möglicheFolgeStellungFürKI == False:
+
+            if neueFigur == 'wD':
+                self.punkteDurchFigurenWeiß += 10000
+            elif neueFigur == 'wL':
+                self.punkteDurchFigurenWeiß += 6000
+            elif neueFigur == 'wT':
+                self.punkteDurchFigurenWeiß += 6000
+            elif neueFigur == 'wP':
+                self.punkteDurchFigurenWeiß += 4000
+            elif neueFigur == 'sD':
+                self.punkteDurchFigurenSchwarz += 10000
+            elif neueFigur == 'sL':
+                self.punkteDurchFigurenSchwarz += 6000
+            elif neueFigur == 'sT':
+                self.punkteDurchFigurenSchwarz += 6000
+            elif neueFigur == 'sP':
+                self.punkteDurchFigurenSchwarz += 4000
+        else:
+
+            if neueFigur == 'wD':
+                self.punkteDurchFigurenWeiß += 10000
+            elif neueFigur == 'wL':
+                self.punkteDurchFigurenWeiß += 6000
+            elif neueFigur == 'wT':
+                self.punkteDurchFigurenWeiß += 6000
+            elif neueFigur == 'wP':
+                self.punkteDurchFigurenWeiß += 4000
+            elif neueFigur == 'sD':
+                self.punkteDurchFigurenSchwarz += 10000
+            #elif neueFigur == 'sP':
+            #    self.punkteDurchFigurenSchwarz += 2400                      
+
+    #In dieser Methode wird kontrolliert, ob es eine gegnerische Figur gibt, die in den Bereich der Rochade kommen könnte.
+    def kontrollHilfeRochade(self, spalte):
+
+        #Falls es eine eigene Figur unter dem des aktuell betrachteten Bereiches gibt, muss der Bereich nach Unten nicht kontrolliert werden.
+        #Dasselbe gilt für die anderen Richtungen
+        kontrolleLinksOben = True
+        kontrolleOben = True
+        kontrolleRechtsOben = True
+
+        kontrolleLinksUnten = True
+        kontrolleUnten = True
+        kontrolleRechtsUnten = True
+
+        if self.zugWeiß:
+
+            if spalte > 0:
+                if self.spielbrett[7-1][spalte-1][:1] == 'w': 
+                    kontrolleLinksOben = False
+            if self.spielbrett[7-1][spalte][:1] == 'w': 
+                kontrolleOben = False
+            if spalte < 7:
+                if self.spielbrett[7-1][spalte+1][:1] == 'w':
+                    kontrolleRechtsOben = False
+
+            #Kontrolle für gegnerischen Bauern und König
+            if spalte > 0 and spalte < 7:
+                if self.spielbrett[7-1][spalte-1] == 'sB' or self.spielbrett[7-1][spalte] == 'sB' or self.spielbrett[7-1][spalte+1] == 'sB':
+                    return False
+                elif self.spielbrett[7-1][spalte-1] == 'sK' or self.spielbrett[7-1][spalte] == 'sK' or self.spielbrett[7-1][spalte+1] == 'sK':
+                    return False
+            
+                #Kontrolle für Springer
+                elif spalte > 1 and spalte < 6 :
+                    if (self.spielbrett[7-1][spalte-2] == 'sP' or self.spielbrett[7-2][spalte-1] == 'sP' or self.spielbrett[7-2][spalte+1] == 'sP' or 
+                        self.spielbrett[7-1][spalte+2] == 'sP'):
+                            return False 
+                elif spalte == 1:
+                    if (self.spielbrett[7-2][spalte-1] == 'sP' or self.spielbrett[7-2][spalte+1] == 'sP' or self.spielbrett[7-1][spalte+2] == 'sP'):
+                        return False
+                elif spalte == 6:
+                    if (self.spielbrett[7-2][spalte-1] == 'sP' or self.spielbrett[7-2][spalte+1] == 'sP' or self.spielbrett[7-1][spalte-2] == 'sP'):
+                        return False
+                    
+            if spalte == 0:
+                if (self.spielbrett[7-2][spalte+1] == 'sP' or self.spielbrett[7-1][spalte+2] == 'sP'):
+                    return False
+                elif self.spielbrett[7-1][spalte] == 'sB' or self.spielbrett[7-1][spalte+1] == 'sB':
+                    return False
+                elif self.spielbrett[7-1][spalte] == 'sK' or self.spielbrett[7-1][spalte+1] == 'sK':
+                    return False
+            elif spalte == 7:
+                if (self.spielbrett[7-1][spalte-2] == 'sP' or self.spielbrett[7-2][spalte-1] == 'sP'):
+                    return False
+                elif self.spielbrett[7-1][spalte-1] == 'sB' or self.spielbrett[7-1][spalte] == 'sB':
+                    return False
+                elif self.spielbrett[7-1][spalte-1] == 'sK' or self.spielbrett[7-1][spalte] == 'sK':
+                    return False    
+
+            #Hier erfolgt eine Kontrolle nach links oben. In dieser Richtung könnte ein Läufer oder eine Dame sein.
+            if kontrolleLinksOben:
+                zeileHilf1 = 7
+                spalteHilf1 = spalte
+                while True:
+                    if zeileHilf1 > 0 and spalteHilf1 > 0:
+                        zeileHilf1-=1
+                        spalteHilf1-=1
+                        if self.spielbrett[zeileHilf1][spalteHilf1] == 'sD' or self.spielbrett[zeileHilf1][spalteHilf1] == 'sL':
+                            return False
+                        elif self.spielbrett[zeileHilf1][spalteHilf1][:1] == 'w':
+                            kontrolleLinksOben = False
+                            break
+                    else:
+                        break
+
+            #Hier erfolgt eine Kontrolle nach oben, die könnte ein Turm oder eine Dame sein.
+            if kontrolleOben:
+                zeileHilf2 = 7
+                spalteHilf2 = spalte         
+                while True:
+                    if zeileHilf2 > 0:
+                        zeileHilf2-=1
+                        if self.spielbrett[zeileHilf2][spalteHilf2] == 'sD' or self.spielbrett[zeileHilf2][spalteHilf2] == 'sT':
+                            return False
+                        elif self.spielbrett[zeileHilf2][spalteHilf2][:1] == 'w':
+                            kontrolleOben = False
+                            break
+                    else:
+                        break
+
+            #Hier erfolgt die Kontrolle nach rechts oben. Dies könnte ein Läufer oder eine Dame sein.
+            if spalte < 7:
+                if kontrolleRechtsOben:
+                    zeileHilf3 = 7
+                    spalteHilf3 = spalte
+                    while True:
+                        if zeileHilf3 > 0 and spalteHilf3 < 7:
+                            zeileHilf3-=1
+                            spalteHilf3+=1
+                            if self.spielbrett[zeileHilf3][spalteHilf3] == 'sD' or self.spielbrett[zeileHilf3][spalteHilf3] == 'sL':
+                                return False
+                            elif self.spielbrett[zeileHilf3][spalteHilf3][:1] == 'w':
+                                kontrolleRechtsOben = False
+                                break
+                        else:
+                            break
+        else:
+
+            #Falls es eine eigene Figur unter dem des aktuell betrachteten Bereiches gibt, muss der Bereich nach Unten nicht kontrolliert werden.
+            #Dasselbe gilt für die anderen Richtungen
+            if spalte > 0:
+                if self.spielbrett[0+1][spalte-1][:1] == 's': 
+                    kontrolleLinksUnten = False
+            if self.spielbrett[0+1][spalte][:1] == 's':
+                kontrolleUnten = False
+            if spalte < 7:
+                if self.spielbrett[0+1][spalte+1][:1] == 's':
+                    kontrolleRechtsUnten = False
+
+            #Kontrolle für gegnerischen Bauern und König
+            if spalte > 0 and spalte < 7:
+                if self.spielbrett[0+1][spalte-1] == 'wB' or self.spielbrett[0+1][spalte] == 'wB' or self.spielbrett[0+1][spalte+1] == 'wB':
+                    return False
+                elif self.spielbrett[0+1][spalte-1] == 'wK' or self.spielbrett[0+1][spalte] == 'wK' or self.spielbrett[0+1][spalte+1] == 'wK':
+                    return False
+            
+                #Kontrolle für Springer
+                elif spalte > 1 and spalte < 6 :
+                    if (self.spielbrett[0+1][spalte-2] == 'wP' or self.spielbrett[0+2][spalte-1] == 'wP' or self.spielbrett[0+2][spalte+1] == 'wP' or 
+                        self.spielbrett[0+1][spalte+2] == 'wP'):
+                            return False 
+                elif spalte == 1:
+                    if (self.spielbrett[0+2][spalte-1] == 'wP' or self.spielbrett[0+2][spalte+1] == 'wP' or self.spielbrett[0+1][spalte+2] == 'wP'):
+                        return False
+                elif spalte == 6:
+                    if (self.spielbrett[0+2][spalte-1] == 'wP' or self.spielbrett[0+2][spalte+1] == 'wP' or self.spielbrett[0+1][spalte-2] == 'wP'):
+                        return False
+                    
+            if spalte == 0:
+                if (self.spielbrett[0+2][spalte+1] == 'wP' or self.spielbrett[0+1][spalte+2] == 'wP'):
+                    return False
+                elif self.spielbrett[0+1][spalte] == 'wB' or self.spielbrett[0+1][spalte+1] == 'wB':
+                    return False
+                elif self.spielbrett[0+1][spalte] == 'wK' or self.spielbrett[0+1][spalte+1] == 'wK':
+                    return False
+            elif spalte == 7:
+                if (self.spielbrett[0+1][spalte-2] == 'wP' or self.spielbrett[0+2][spalte-1] == 'wP'):
+                    return False
+                elif self.spielbrett[0+1][spalte-1] == 'wB' or self.spielbrett[0+1][spalte] == 'wB':
+                    return False
+                elif self.spielbrett[0+1][spalte-1] == 'wK' or self.spielbrett[0+1][spalte] == 'wK':
+                    return False    
+
+            #Hier erfolgen Kontrollen in alle Richtungen.
+            if kontrolleLinksUnten:
+                zeileHilf4 = 0
+                spalteHilf4 = spalte
+                while True:
+                    if zeileHilf4 < 7 and spalteHilf4 > 0:
+                        zeileHilf4+=1
+                        spalteHilf4-=1
+                        if self.spielbrett[zeileHilf4][spalteHilf4] == 'wD' or self.spielbrett[zeileHilf4][spalteHilf4] == 'wL':
+                            return False
+                        elif self.spielbrett[zeileHilf4][spalteHilf4][:1] == 's':
+                            kontrolleLinksUnten = False
+                            break
+                    else:
+                        break
+            if kontrolleUnten:
+                zeileHilf5 = 0
+                spalteHilf5 = spalte
+                while True:
+                    if zeileHilf5 < 7:
+                        zeileHilf5+=1
+                        if self.spielbrett[zeileHilf5][spalteHilf5] == 'wD' or self.spielbrett[zeileHilf5][spalteHilf5] == 'wT':
+                            return False
+                        elif self.spielbrett[zeileHilf5][spalteHilf5][:1] == 's':
+                            kontrolleUnten = False
+                            break
+                    else:
+                        break
+            if kontrolleRechtsUnten:
+                zeileHilf6 = 0
+                spalteHilf6 = spalte 
+                while True:
+                    if zeileHilf6 < 7 and spalteHilf6 < 7:
+                        zeileHilf6+=1
+                        spalteHilf6+=1
+                        if self.spielbrett[zeileHilf6][spalteHilf6] == 'wD' or self.spielbrett[zeileHilf6][spalteHilf6] == 'wL':
+                            return False
+                        if self.spielbrett[zeileHilf6][spalteHilf6][:1] == 's':
+                            kontrolleRechtsUnten = False
+                            break
+                    else:
+                        break
+        return True
+    
+    #Hier wird anhand des ersten und des zweiten Klicks geguckt, welche Figur der Spieler bewegen will und ob dieser Zug möglich ist.
     def kontrolliere(self):
+        
         sZ = self.startZeile
         sP = self.startSpalte
         eZ = self.endZeile
         eP = self.endSpalte
 
         if(self.spielbrett[sZ][sP][1:] == 'B'):
-            return self.kontrolliereBauern(sZ, sP, eZ, eP)
+            return self.kontrolliereBauern(sZ, sP, eZ, eP, False)
         elif(self.spielbrett[sZ][sP][1:] == 'T'):
-            return self.kontrolliereTurm(sZ, sP, eZ, eP)
+            return self.kontrolliereTurm(sZ, sP, eZ, eP, False)
         elif(self.spielbrett[sZ][sP][1:] == 'P'):
-            return self.kontrolliereSpringer(sZ, sP, eZ, eP)
+            return self.kontrolliereSpringer(sZ, sP, eZ, eP, False)
         elif(self.spielbrett[sZ][sP][1:] == 'L'):
-            return self.kontrolliereLäufer(sZ, sP, eZ, eP)
+            return self.kontrolliereLäufer(sZ, sP, eZ, eP, False)
         elif(self.spielbrett[sZ][sP][1:] == 'D'):
-            return self.kontrolliereDame(sZ, sP, eZ, eP)
+            return self.kontrolliereDame(sZ, sP, eZ, eP, False)
         elif(self.spielbrett[sZ][sP][1:] == 'K'):
-            return self.kontrolliereKönig(sZ, sP, eZ, eP)
+            return self.kontrolliereKönig(sZ, sP, eZ, eP, False)
     
+    #In dieser Methode wird kontrolliert, ob der Spieler, der jetzt mit dem Zug dran ist, einen Zug machen kann. Jedes einzelne Feld wird durchgegangen
+    #und es wird geguckt, welche Figur in diesem Feld vorhanden ist, entsprechend der Figur wird eine Methode aufgerufen, welches kontrolliert, ob mit dieser
+    #Figur ein Zug gemacht werden kann. Sobald eine Figur einen Zug machen kann, wird True zurückgegeben. Falls es keine Figur gibt, welches der Spieler bewegen kann
+    #wird False zurückgegeben.
     def kontrolliereZugMöglichkeit(self):
         
         for i, zeile in enumerate(self.spielbrett):
@@ -370,7 +999,7 @@ class SpielStand():#übernommen
                 elif(self.spielbrett[i][l][1:] == 'T'):
                     if self.kontrolliereTurmZug(i, l):
                         return True
-                elif(self.spielbrett[i][l][1:] == 'S'):
+                elif(self.spielbrett[i][l][1:] == 'P'):
                     if self.kontrolliereSpringerZug(i, l):
                         return True
                 elif(self.spielbrett[i][l][1:] == 'L'):
@@ -381,11 +1010,639 @@ class SpielStand():#übernommen
                         return True
         return False
 
+    def bewertungBauer(self, zugZeile, zugSpalte, startZeile, startSpalte):
+        punkte = 0
+        farbe = self.spielbrett[startZeile][startSpalte][0]
+        if farbe == 'w':
+            
+            if self.spielbrett[zugZeile][zugSpalte] == 'sD':
+                punkte = 350
+            elif self.spielbrett[zugZeile][zugSpalte] == 'sK':
+                punkte = 20
+            elif self.spielbrett[zugZeile][zugSpalte] == 'sT':
+                punkte = 200
+            elif self.spielbrett[zugZeile][zugSpalte] == 'sL':
+                punkte = 200
+            elif self.spielbrett[zugZeile][zugSpalte] == 'sP':
+                punkte = 100
+            elif self.spielbrett[zugZeile][zugSpalte] == 'sB':
+                punkte = 10
+
+            if (zugZeile, zugSpalte) == ((0,3) or (0,4)):
+                punkte = 10
+            elif zugZeile == 0:
+                punkte = 45
+            #elif startZeile == 7 and zugZeile == 4:
+            #    punkte = 5
+            #elif not len(self.enPassantFelderFürBauerWeiß) == 0:
+            #    z = self.enPassantFelderFürBauerWeiß
+            #    if (startZeile, startSpalte) == z[0] and (zugZeile, zugSpalte) == z[1]:
+            #        punkte = 10
+            #elif startZeile == 6 and zugZeile == 4:
+            #    punkte = 15 
+
+            if punkte == 0:
+                punkte = 1
+            #print("Die Punkte die durch diesen Bauern hinzugekommen sind: ", punkte + 10)
+            self.punkte -= (punkte)
+            
+        else:
+
+            if self.spielbrett[zugZeile][zugSpalte] == 'wD':
+                punkte = 350
+            elif self.spielbrett[zugZeile][zugSpalte] == 'wK':
+                punkte = 20
+            elif self.spielbrett[zugZeile][zugSpalte] == 'wT':
+                punkte = 200
+            elif self.spielbrett[zugZeile][zugSpalte] == 'wL':
+                punkte = 200
+            elif self.spielbrett[zugZeile][zugSpalte] == 'wP':
+                punkte = 100
+            elif self.spielbrett[zugZeile][zugSpalte] == 'wB':
+                punkte = 10
+
+            if (zugZeile, zugSpalte) == ((8,3) or (8,4)):
+                punkte += 10
+            elif zugZeile == 7:
+                punkte += 45 
+            #elif not len(self.enPassantFelderFürBauerSchwarz) == 0:
+            #    z = self.enPassantFelderFürBauerSchwarz
+            #    if (startZeile, startSpalte) == z[0] and (zugZeile, zugSpalte) == z[1]:
+            #        punkte += 10
+            #elif startZeile == 1 and zugZeile == 3:
+            #    punkte += 15 
+
+            if punkte == 0:
+                punkte = 1
+            #print("Die Punkte die durch diesen Bauern hinzugekommen sind: ", punkte + 10)
+            self.punkte += (punkte)
+
+
+    def bewertungTurmSpringerLäuferDameKönig(self, zugZeile, zugSpalte, startZeile, startSpalte):
+        punkte = 0
+        farbe = self.spielbrett[startZeile][startSpalte][0]
+        if farbe == 'w':
+
+            if (zugZeile, zugSpalte) == ((0,3) or (0,4)):
+                if self.spielbrett[zugZeile][zugSpalte] == 'sD':
+                    if self.bewegteFigur[1] == 'B' or self.bewegteFigur[1] == 'P':
+                        punkte = 100
+                    else:
+                        punkte = 6
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sK':
+                    punkte = 3
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sT':
+                    punkte = 5
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sL':
+                    punkte = 5
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sP':
+                    punkte = 4
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sB':
+                    punkte = 2
+
+            elif (zugZeile, zugSpalte) != ((0,3) or (0,4)):
+                if self.spielbrett[zugZeile][zugSpalte] == 'sD':                                 
+                    punkte = 350
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sK':
+                    punkte = 20
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sT':
+                    punkte = 200
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sL':
+                    punkte = 200
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sP':
+                    punkte = 100
+                elif self.spielbrett[zugZeile][zugSpalte] == 'sB':
+                    punkte = 10
+
+            elif (zugZeile, zugSpalte) == ((0,3) or (0,4)):
+                punkte = 1
+
+            if (zugZeile, zugSpalte) in self.positionenMitte1:
+                punkte += 1
+            elif (zugZeile, zugSpalte) in self.positionenMitte2:
+                punkte += 2
+
+            self.punkte -= punkte
+
+        else:
+                
+            if (zugZeile, zugSpalte) == ((8,3) or (8,4)):
+                if self.spielbrett[zugZeile][zugSpalte] == 'wD':
+                    if self.bewegteFigur[1] == 'B' or self.bewegteFigur[1] == 'P':
+                        punkte = 100
+                    else:
+                        punkte = 6
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wD':
+                    punkte = 6
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wK':
+                    punkte = 3
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wT':
+                    punkte = 5
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wL':
+                    punkte = 5
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wP':
+                    punkte = 4
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wB':
+                    punkte = 2
+
+            elif (zugZeile, zugSpalte) != ((8,3) or (8,4)):
+                if self.spielbrett[zugZeile][zugSpalte] == 'wD':
+                    punkte = 350
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wK':
+                    punkte = 20
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wT':
+                    punkte = 200
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wL':
+                    punkte = 200
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wP':
+                    punkte = 100
+                elif self.spielbrett[zugZeile][zugSpalte] == 'wB':
+                    punkte = 10
+
+            elif (zugZeile, zugSpalte) == ((8,3) or (8,4)):
+                punkte = 1
+
+            if (zugZeile, zugSpalte) in self.positionenMitte1:
+                punkte += 1
+            elif (zugZeile, zugSpalte) in self.positionenMitte2:
+                punkte += 2
+        
+            self.punkte += punkte  
+
+    #In dieser Methode werden alle Züge, die in dieser Stellung der Figuren gemacht werden können ermittelt. Alle möglichen Züge werden bepunktet und diese
+    #Punkte werden aufaddiert. Somit ergibt sich die Gesamtpunktzahl für diese Stellung der Figuren. In einem Array werden alle möglichen Züge, die Punkte dieser
+    #Stellung der Figuren, die Figur, mit dem der Zug gemacht wurde und die Folgestellung, die durch diesen Zug entstanden ist, gespeichert. 
+    def ermittleAlleMöglichenZüge(self, kopieKnoten, listeEltern: List, listeKinder: List, listeZuLöschenderKnoten: List, erstelleKinder = True):
+        
+        if self.spielBeendet == True:
+            
+            erstelleKinder = False
+            if self.ToreWeiß > self.ToreSchwarz:
+                self.punkte = float('-inf')
+                #print("Weiß hat das Spiel gewonnen.")
+            elif self.ToreWeiß < self.ToreSchwarz:
+                self.punkte = float('inf')
+                #print("Schwarz hat das Spiel gewonnen.")
+                
+        else:
+            hilf = 0
+            self.punkte = self.punkteDurchFigurenSchwarz - self.punkteDurchFigurenWeiß
+
+            for i, zeile in enumerate(self.spielbrett):
+                for l, _ in enumerate(zeile):
+                    hilf+=1
+                    
+                    if self.zugWeiß:
+
+                        if(self.spielbrett[i][l] == 'wB'):
+
+                            if i == 0 and (not (l == 3 or l == 4)):
+                                #figurenWeiß = ['wP', 'wD', 'wT', 'wL']
+                                #for f in figurenWeiß:
+                                f = 'wD'
+                                kopie = kopieKnoten.kopiereSpielStand()
+                                kopie.neueFigurFürBauernHilf = True
+                                kopie.führeMöglichenZugAus(f, (i,l), (i,l))
+                                
+                                if not self.elternknoten == None:
+                                    
+                                    self.elternknoten.kinder.append(kopie)
+                                    kopie.elternknoten = self.elternknoten
+                                listeEltern.append(kopie)
+
+                                if not self.elternknoten == None:
+                                    self.elternknoten.kinder.remove(self)
+                                    
+                                listeZuLöschenderKnoten.append(self)
+                                break
+                            else:
+
+                                list = self.kontrolliereBauern(i, l, 0, 0, True)
+                               
+                                for x in list: 
+
+                                    self.bewertungBauer(x[0], x[1], i, l)
+
+                                    if erstelleKinder:
+                                        
+                                        kopie = kopieKnoten.kopiereSpielStand()
+                                        kopie.kinder = []
+                                        kopie.punkte = 0
+
+                                        #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                        #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+
+                                        if self.enPassantFürBauerWeißKI:
+                                            if [(i,l), (x[0], x[1])] == self.enPassantFelderFürBauerWeiß:
+                                                kopie.enPassantFürBauerWeiß = True
+                                                kopie.enPassantFelderFürBauerWeiß = copy.copy(self.enPassantFelderFürBauerWeiß)
+                                                kopie.enPassantFürBauerWeißKI = False
+                                                self.enPassantFürBauerWeißKI = False
+                                                kopie.führeMöglichenZugAus('wB', (i,l), x)
+
+                                        elif i == 6 and x[0] == 4:
+                                            #Falls der Bauer zwei Felder nach vorne bewegt wird, wird kontrolliert, ob ein Bauer von Schwarz links oder rechts davon ist.
+                                            #Falls ja, wird der mögliche Zug abgespeichert, sodass Schwarz im nächsten Zug einen En-Passant-Zug machen kann.
+                                            if l > 0 and i > 1:
+                                                if self.spielbrett[i-2][l-1] == 'sB' and self.spielbrett[i-1][l][:1] != 's':
+                                                    kopie.enPassantFelderFürBauerSchwarz = [(i-2,l-1), (i-1, l)]
+                                                    kopie.enPassantFürBauerSchwarzKI = True
+
+                                            if i > 1 and l < 7:
+                                                if self.spielbrett[i-2][l+1] == 'sB' and self.spielbrett[i-1][l][:1] != 's':
+                                                    kopie.enPassantFelderFürBauerSchwarz = [(i-2,l+1), (i-1, l)] 
+                                                    kopie.enPassantFürBauerSchwarzKI = True
+                                        
+                                            kopie.führeMöglichenZugAus('wB', (i,l), x)
+
+                                        else:
+                                            kopie.führeMöglichenZugAus('wB', (i,l), x)
+  
+
+                                        self.kinder.append(kopie)
+                                        listeKinder.append(kopie)
+                                        kopie.elternknoten = self 
+
+                        elif(self.spielbrett[i][l] == 'sB'):
+                            
+                            list = self.kontrolliereBauern(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungBauer(x[0], x[1], i, l)          
+
+                        elif(self.spielbrett[i][l] == 'wT'):
+                                                        
+                            list = self.kontrolliereTurm(i, l, 0, 0, True)
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+    
+                                if erstelleKinder:
+
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('wT', (i,l), x)
+
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)           
+                                    kopie.elternknoten = self   
+
+                        elif(self.spielbrett[i][l] == 'sT'):
+                               
+                            list = self.kontrolliereTurm(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'wP'):
+                            
+                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
+
+                            for x in list:
+
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if erstelleKinder:
+                                    
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('wP', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)                   
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'sP'):
+                            
+                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
+
+                            for x in list:
+
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'wL'):
+                        
+                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if erstelleKinder:
+                                
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('wL', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)              
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'sL'):
+                               
+                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
+
+                            for x in list:
+                            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'wD'):
+                            
+                            list = self.kontrolliereDame(i, l, 0, 0, True)
+
+                            for x in list:
+                            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if erstelleKinder:
+                                    
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('wD', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)              
+                                    kopie.elternknoten = self
+                        
+                        elif(self.spielbrett[i][l] == 'sD'):
+                            
+                            list = self.kontrolliereDame(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'wK'):
+                            
+                            list = self.kontrolliereKönig(i, l, 0, 0, True)
+                            
+                            for x in list:
+            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                    
+                                if erstelleKinder:
+                            
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    kopie.rochadeKleinWeißKIHilf = self.rochadeKleinWeißKIHilf
+                                    kopie.rochadeGroßWeißKIHilf = self.rochadeGroßWeißKIHilf
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('wK', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)               
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'sK'):
+                            
+                            list = self.kontrolliereKönig(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                    else:
+
+                        if(self.spielbrett[i][l] == 'sB'):
+                    
+                            if i == 7 and (not (l == 3 or l == 4)):
+                                #figurenSchwarz = ['sP', 'sD']
+                                #for f in figurenSchwarz:
+
+                                f = 'sD'
+                                #kopieKnoten.zugWeiß = not kopieKnoten.zugWeiß
+                                kopie = kopieKnoten.kopiereSpielStand()
+                                #print("Kopie, Punkte: ", kopie.punkte)
+                                #print("Self, Punkte: ", self.punkte)
+                                #print("Geliche Referenz: ", kopie is self)
+                                kopie.neueFigurFürBauernHilf = True
+                                kopie.führeMöglichenZugAus(f, (i,l), (i,l))
+                                #kopie.zugWeiß = False
+                                if not self.elternknoten == None:
+                                    self.elternknoten.kinder.append(kopie)
+                                    kopie.elternknoten = self.elternknoten
+                                listeEltern.append(kopie)
+
+                                if not self.elternknoten == None:
+                                    self.elternknoten.kinder.remove(self)
+                                listeZuLöschenderKnoten.append(self)
+                                break
+                            else:
+                                list = self.kontrolliereBauern(i, l, 0, 0, True)
+
+                                for x in list:
+                                    
+                                    self.bewertungBauer(x[0], x[1], i, l)
+
+                                    if erstelleKinder:
+                                        
+                                        kopie = kopieKnoten.kopiereSpielStand()
+                                        kopie.kinder = []
+                                        kopie.punkte = 0
+                                        #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                        #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+
+                                        if self.enPassantFürBauerSchwarzKI:
+                                            if [(i,l), (x[0], x[1])] == self.enPassantFelderFürBauerSchwarz:
+                                                kopie.enPassantFürBauerSchwarz = True
+                                                kopie.enPassantFelderFürBauerSchwarz = copy.copy(self.enPassantFelderFürBauerSchwarz)
+                                                kopie.enPassantFürBauerSchwarzKI = False
+                                                self.enPassantFürBauerSchwarzKI = False
+                                                kopie.führeMöglichenZugAus('sB', (i,l), x)
+
+                                        elif i == 1 and x[0] == 3:
+                                            #Der Bauer wird zwei Felder nach vorne bewegt. Es wird kontrolliert, ob ein weißer Bauer links oder rechts davon ist. Falls ja, wird der 
+                                            #Zug abgespeichert, den Weiß im nächsten Zug machen darf.
+                                            if l > 0 and i < 6:
+                                                if self.spielbrett[i+2][l-1] == 'wB' and self.spielbrett[i+1][l][:1] != 'w':
+                                                    kopie.enPassantFelderFürBauerWeiß = [(i+2,l-1), (i+1, l)]
+                                                    kopie.enPassantFürBauerWeißKI = True
+
+                                            if i < 6 and l < 7:
+                                                if self.spielbrett[i+2][l+1] == 'wB' and self.spielbrett[i+1][l][:1] != 'w':
+                                                    kopie.enPassantFelderFürBauerWeiß = [(i+2,l+1), (i+1, l)]
+                                                    kopie.enPassantFürBauerWeißKI = True
+                            
+                                            kopie.führeMöglichenZugAus('sB', (i,l), x)
+                                        
+                                        else:
+                                            kopie.führeMöglichenZugAus('sB', (i,l), x)     
+
+                                            if i == 6 and x[0] == 7:
+                                                kopie.löscheBauern = (i,l)
+
+                                        self.kinder.append(kopie)
+                                        listeKinder.append(kopie)
+                                        kopie.elternknoten = self 
+
+                        elif(self.spielbrett[i][l] == 'wB'):
+
+                            list = self.kontrolliereBauern(i, l, 0, 0, True)
+                            for x in list:
+                                self.bewertungBauer(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'sT'):
+                            
+                            list = self.kontrolliereTurm(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if erstelleKinder:
+                                
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('sT', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)               
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'wT'):
+                            
+                            list = self.kontrolliereTurm(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'sP'):
+                            
+                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
+
+                            for x in list:
+
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                            
+                                if erstelleKinder:
+                                
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('sP', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)                  
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'wP'):
+                            
+                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
+
+                            for x in list:
+
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+
+                        elif(self.spielbrett[i][l] == 'sL'):
+                           
+                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
+
+                            for x in list:
+                            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if erstelleKinder:
+                                
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('sL', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)                 
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'wL'):
+                            
+                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'sD'):
+                            
+                            list = self.kontrolliereDame(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                                if erstelleKinder:
+                                    
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.führeMöglichenZugAus('sD', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)                 
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'wD'):
+                            
+                            list = self.kontrolliereDame(i, l, 0, 0, True)
+
+                            for x in list:
+                            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                        elif(self.spielbrett[i][l] == 'sK'):
+                            
+                            list = self.kontrolliereKönig(i, l, 0, 0, True)
+
+                            for x in list:
+                                
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if erstelleKinder:
+                    
+                                    kopie = kopieKnoten.kopiereSpielStand()
+                                    kopie.kinder = []
+                                    kopie.punkte = 0
+                                    #print("Sind die Kopien der Klasse identisch: ", self is kopie)
+                                    #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
+                                    kopie.rochadeKleinSchwarzKIHilf = self.rochadeKleinSchwarzKIHilf
+                                    kopie.rochadeGroßSchwarzKIHilf = self.rochadeGroßSchwarzKIHilf                
+                                    kopie.führeMöglichenZugAus('sK', (i,l), x)
+                                    self.kinder.append(kopie)
+                                    listeKinder.append(kopie)            
+                                    kopie.elternknoten = self
+
+                        elif(self.spielbrett[i][l] == 'wK'):
+                            
+                            list = self.kontrolliereKönig(i, l, 0, 0, True)
+                            
+                            for x in list:
+            
+                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+        #self.zugWeiß = not self.zugWeiß
+
+    #Es wird kontrolliert, ob der Bauer in dem heweiligen Feld einen Zug machen kann
     def kontrolliereBauernZug(self,zeile,spalte):
 
         figur = self.spielbrett[zeile][spalte][:1]
         if self.zugWeiß:
             if figur == 'w':
+                if zeile == 0:
+                    return True
                 if zeile == 3:
                     if not len(self.enPassantFelderFürBauerWeiß) == 0:
                         for p in self.enPassantFelderFürBauerWeiß:
@@ -395,16 +1652,18 @@ class SpielStand():#übernommen
                     if (self.spielbrett[zeile-1][spalte]) == '--': #Bauer wird ein Feld nach vorne bewegt.
                         return True
                 if (zeile > 0 and spalte > 0):
-                    if (self.spielbrett[zeile-1][spalte-1][:1] == 'g'): #Bauer schlägt eine Figur oben links
+                    if (self.spielbrett[zeile-1][spalte-1][:1] == 's'): #Bauer schlägt eine Figur oben links
                         return True
                 if (zeile > 0 and spalte < 7):
-                    if (self.spielbrett[zeile-1][spalte+1][:1] == 'g'): #Bauer schlägt eine Figur oben rechts
+                    if (self.spielbrett[zeile-1][spalte+1][:1] == 's'): #Bauer schlägt eine Figur oben rechts
                         return True
                 if (zeile == 6): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
                     return True
                 
         elif not self.zugWeiß:
-            if figur == 'g':
+            if figur == 's':
+                if zeile == 7:
+                    return True
                 if zeile == 4:
                     if not len(self.enPassantFelderFürBauerSchwarz) == 0:
                         for p in self.enPassantFelderFürBauerSchwarz:
@@ -422,8 +1681,9 @@ class SpielStand():#übernommen
                 if (zeile == 1): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
                     return True
 
-    def kontrolliereBauern(self, sZ, sP, eZ, eP): 
-
+    #Es wird kontrolliert, ob der Zug, den der Spieler mit dem Bauern machen will, gemacht werden kann.
+    def kontrolliereBauern(self, sZ, sP, eZ, eP, ki = False): 
+        
         gewünschtesFeld = (eZ, eP)
         erreichbareFelder = []
         figur = self.spielbrett[sZ][sP][:1]
@@ -431,48 +1691,71 @@ class SpielStand():#übernommen
         if self.zugWeiß:
             if figur == 'w':
                 if sZ == 3:
+                    #Falls Schwarz einen Bauern zwei Felder nach vorne bewegt, kann Weiß einen En-Pasant-Zug machen.
                     if not len(self.enPassantFelderFürBauerWeiß) == 0:
-                        for p in self.enPassantFelderFürBauerWeiß:
-                            if (sZ, sP) == p[0] and gewünschtesFeld == p[1]:
-                                erreichbareFelder.append(p[1])
+                            e = self.enPassantFelderFürBauerWeiß
+
+                            if ki:
+                               self.enPassantFürBauerWeißKI = True 
+                               erreichbareFelder.append(e[1])
+
+                            #Sobald Schwarz einen Bauern zwei Felder nach vorne bewegt, wird kontrolliert, ob links und rechts vom Bauern ein Bauer von Weiß
+                            #vorhanden ist. Falls ja, wird der mögliche En-Passant-Zug abgespeichert, den der Bauer von Weiß machen kann.
+                            if (sZ, sP) == e[0] and gewünschtesFeld == e[1] and self.spielbrett[e[1][0]][e[1][1]][:1] != 'w':
+                                erreichbareFelder.append(e[1])
+                                #Diese Variable ich später wichtig für die Methode macheZug.
                                 self.enPassantFürBauerWeiß = True
                 if sZ > 0:
                     if (self.spielbrett[sZ-1][sP]) == '--': #Bauer wird ein Feld nach vorne bewegt.
                         erreichbareFelder.append((sZ-1, sP))
                 if (sZ > 0 and sP > 0):
-                    if (self.spielbrett[sZ-1][sP-1][:1] == 'g'): #Bauer schlägt eine Figur oben links
+                    if (self.spielbrett[sZ-1][sP-1][:1] == 's'): #Bauer schlägt eine Figur oben links
                         erreichbareFelder.append((sZ-1, sP-1))
                 if (sZ > 0 and sP < 7):
-                    if (self.spielbrett[sZ-1][sP+1][:1] == 'g'): #Bauer schlägt eine Figur oben rechts
+                    if (self.spielbrett[sZ-1][sP+1][:1] == 's'): #Bauer schlägt eine Figur oben rechts
                         erreichbareFelder.append((sZ-1, sP+1))
                 if (sZ == 6): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
-                    erreichbareFelder.append((sZ-2, sP))
-                    if gewünschtesFeld == (sZ-2, sP):
-    
-                        if sP > 0 and sZ > 1:
-                            if self.spielbrett[sZ-2][sP-1] == 'gB':
-                                self.enPassantFelderFürBauerSchwarz.append([(sZ-2,sP-1), (sZ-1, sP)])
 
-                        if sZ > 1 and sP < 7:
-                            if self.spielbrett[sZ-2][sP+1] == 'gB':
-                                self.enPassantFelderFürBauerSchwarz.append([(sZ-2,sP+1), (sZ-1, sP)]) 
+                    if self.spielbrett[sZ-2][sP] == '--' and self.spielbrett[sZ-1][sP] == '--':
 
-                if (sZ == 0): #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+                        erreichbareFelder.append((sZ-2, sP))
+                        if gewünschtesFeld == (sZ-2, sP):
+                            
+                            #Falls der Bauer zwei Felder nach vorne bewegt wird, wird kontrolliert, ob ein Bauer von Schwarz links oder rechts davon ist.
+                            #Falls ja, wird der mögliche Zug abgespeichert, sodass Schwarz im nächsten Zug einen En-Passant-Zug machen kann.
+                            if sP > 0 and sZ > 1:
+                                if self.spielbrett[sZ-2][sP-1] == 'sB' and self.spielbrett[sZ-1][sP][:1] != 's':
+                                    self.enPassantFelderFürBauerSchwarz = [(sZ-2,sP-1), (sZ-1, sP)]
 
-                    if(self.spielbrett[eZ][eP] != '--' and self.spielbrett[eZ][eP][:1] == 'w'):
-                        self.neueFigurFürBauern = True
-                        print("In kontrolliereBauer, Weiß: ", self.neueFigurFürBauern)
-                        erreichbareFelder.append((eZ, eP))
+                            if sZ > 1 and sP < 7:
+                                if self.spielbrett[sZ-2][sP+1] == 'sB' and self.spielbrett[sZ-1][sP][:1] != 's':
+                                    self.enPassantFelderFürBauerSchwarz = [(sZ-2,sP+1), (sZ-1, sP)] 
+
+                #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+                if (eZ == 0 and (eZ,eP) in erreichbareFelder and (not (eP==3 or eP==4))): 
+                    self.neueFigurFürBauernHilf = True
+                    if self.möglicheFolgeStellungFürKI == False:
+                        self.zugWeiß = True
+                    
+                    erreichbareFelder.append((eZ, eP))
 
         elif not self.zugWeiß:
 
-            if figur == 'g':
+            if figur == 's':
                 if sZ == 4:
                     if not len(self.enPassantFelderFürBauerSchwarz) == 0:
-                        for p in self.enPassantFelderFürBauerSchwarz:
-                            if (sZ, sP) == p[0] and gewünschtesFeld == p[1]:
-                                erreichbareFelder.append(p[1])
-                                self.enPassantFürBauerSchwarz = True
+                        #Falls der Bauer einen En-Passant-Zug machen kann, wird dies getan. Festgestellt wird es dadurch, ob der Zug im Array abgespeichert ist oder 
+                        #nicht.
+                        
+                        e = self.enPassantFelderFürBauerSchwarz
+
+                        if ki:
+                            self.enPassantFürBauerSchwarzKI = True 
+                            erreichbareFelder.append(e[1])
+
+                        if (sZ, sP) == e[0] and gewünschtesFeld == e[1] and self.spielbrett[e[1][0]][e[1][1]][:1] != 's':
+                            erreichbareFelder.append(e[1])
+                            self.enPassantFürBauerSchwarz = True
                 
                 if sZ < 7:
                     if (self.spielbrett[sZ+1][sP]) == '--': #Bauer wird ein Feld nach vorne bewegt.
@@ -484,50 +1767,60 @@ class SpielStand():#übernommen
                     if (self.spielbrett[sZ+1][sP+1][:1] == 'w'): #Bauer schlägt eine Figur unten rechts
                         erreichbareFelder.append((sZ+1, sP+1))
                 if (sZ == 1): #Bauer bewegt sich beim ersten Zug zwei Felder nach vorne.
-                    erreichbareFelder.append((sZ+2, sP))
-                    if gewünschtesFeld == (sZ+2, sP):
-                        if sP > 0 and sZ < 6:
-                            if self.spielbrett[sZ+2][sP-1] == 'wB':
-                                self.enPassantFelderFürBauerWeiß.append([(sZ+2,sP-1), (sZ+1, sP)])
 
-                        if sZ < 6 and sP < 7:
-                            if self.spielbrett[sZ+2][sP+1] == 'wB':
-                                self.enPassantFelderFürBauerWeiß.append([(sZ+2,sP+1), (sZ+1, sP)]) 
-                if (sZ == 7): #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+                    if self.spielbrett[sZ+2][sP] == '--' and self.spielbrett[sZ+1][sP] == '--':
 
-                    if(self.spielbrett[eZ][eP] != '--' and self.spielbrett[eZ][eP][:1] == 'g'):
-                        self.neueFigurFürBauern = True
-                        print("In kontrolliereBauer, Schwarz: ", self.neueFigurFürBauern)
-                        erreichbareFelder.append((eZ, eP))
+                        erreichbareFelder.append((sZ+2, sP))
+                        if gewünschtesFeld == (sZ+2, sP):
+                            #Der Bauer wird zwei Felder nach vorne bewegt. Es wird kontrolliert, ob ein weißer Bauer links oder rechts davon ist. Falls ja, wird der 
+                            #Zug abgespeichert, den Weiß im nächsten Zug machen darf.
+                            if sP > 0 and sZ < 6:
+                                if self.spielbrett[sZ+2][sP-1] == 'wB' and self.spielbrett[sZ+1][sP][:1] != 'w':
+                                    self.enPassantFelderFürBauerWeiß = [(sZ+2,sP-1), (sZ+1, sP)]
 
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
+                            if sZ < 6 and sP < 7:
+                                if self.spielbrett[sZ+2][sP+1] == 'wB' and self.spielbrett[sZ+1][sP][:1] != 'w':
+                                    self.enPassantFelderFürBauerWeiß = [(sZ+2,sP+1), (sZ+1, sP)] 
 
+                #Jetzt wird der Bauer mit einer beliebigen anderen Figur getauscht.
+                if (eZ == 7 and (eZ,eP) in erreichbareFelder and (not (eP==3 or eP==4))):
+                    self.neueFigurFürBauernHilf = True
+                    #if self.möglicheFolgeStellungFürKI == False:
+                    #self.zugWeiß = not self.zugWeiß
+                    erreichbareFelder.append((eZ, eP))
+
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+                
         gewünschtesFeld = ()
         erreichbareFelder = []
         return False
-        
-    def kontrolliereTurmZug(self, zeile, spalte):
 
+    #Es wird kontrolliert, ob der Turm einen Zug machen kann.    
+    def kontrolliereTurmZug(self, zeile, spalte):
+    
         figur = self.spielbrett[zeile][spalte][:1]
         if self.zugWeiß:
             if figur == 'w':
                 if spalte > 0 :
-                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'g':
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 's':
                         return True
                 if spalte < 7:
-                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'g':
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 's':
                         return True
                 if zeile > 0:
-                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'g':
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 's':
                         return True
                 if zeile < 7:
-                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'g':
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 's':
                         return True
 
         elif not self.zugWeiß:
-            if figur == 'g':
+            if figur == 's':
                 if spalte > 0 :
                     if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'w':
                         return True
@@ -541,7 +1834,8 @@ class SpielStand():#übernommen
                     if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'w':
                         return True
 
-    def kontrolliereTurm(self, sZ, sP, eZ, eP):
+    #Es wird kontrolliert, ob der Zug mit dem Turm, den der Spieler machen will, erlaubt ist.
+    def kontrolliereTurm(self, sZ, sP, eZ, eP, ki = False):
       
         pHilfLinks = 1
         pHilfRechts = 1
@@ -560,7 +1854,7 @@ class SpielStand():#übernommen
                         if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
                             pHilfLinks = 1
                             break
-                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 's'):
                             erreichbareFelder.append((sZ, sP-pHilfLinks))
                             pHilfLinks=1
                             break
@@ -578,7 +1872,7 @@ class SpielStand():#übernommen
                         if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
                             pHilfRechts = 1
                             break
-                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 's'):
                             erreichbareFelder.append((sZ, sP+pHilfRechts))
                             pHilfRechts=1
                             break
@@ -594,7 +1888,7 @@ class SpielStand():#übernommen
                         if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
                             zHilfOben = 1
                             break
-                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 's'):
                             erreichbareFelder.append((sZ-zHilfOben, sP))
                             zHilfOben=1
                             break
@@ -611,7 +1905,7 @@ class SpielStand():#übernommen
                         if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
                             zHilfUnten=1
                             break
-                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 's'):
                             erreichbareFelder.append((sZ+zHilfUnten, sP))
                             zHilfUnten=1
                             break
@@ -621,29 +1915,15 @@ class SpielStand():#übernommen
                     else:
                         zHilfUnten=1
                         break
-                
-                if sZ == 7 and sP == 0:
-                    if self.TurmWeißLinksBenutzt == False and self.KönigWeißBenutzt == False:
-                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--' and self.spielbrett[sZ][sP+3] == '--':
-                            if (eZ, eP) == (7,4):
-                                erreichbareFelder.append((sZ, sP+4))
-                                self.rochadeGroßWeiß = True
-
-                if sZ == 7 and sP == 7:
-                    if self.TurmWeißRechtsBenutzt == False and self.KönigWeißBenutzt == False:
-                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--':
-                            if (eZ, eP) == (7,4):
-                                erreichbareFelder.append((sZ, sP-3))
-                                self.rochadeKleinWeiß = True
-
+                               
         elif not self.zugWeiß:
 
-            if figur == 'g':
+            if figur == 's':
                 #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
                 while True:
 
                     if (sP-pHilfLinks >= 0):   
-                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 's'):
                             pHilfLinks = 1
                             break
                         if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
@@ -661,7 +1941,7 @@ class SpielStand():#übernommen
 
                     if (sP+pHilfRechts <= 7): 
                         
-                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 's'):
                             pHilfRechts = 1
                             break
                         if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
@@ -677,7 +1957,7 @@ class SpielStand():#übernommen
                 #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
                 while True:
                     if sZ - zHilfOben >= 0:
-                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 's'):
                             zHilfOben = 1
                             break
                         if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
@@ -694,7 +1974,7 @@ class SpielStand():#übernommen
                 while True:
                     
                     if sZ+zHilfUnten <= 7:
-                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 's'):
                             zHilfUnten=1
                             break
                         if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
@@ -708,29 +1988,18 @@ class SpielStand():#übernommen
                         zHilfUnten=1
                         break
 
-                if sZ == 0 and sP == 0:
-                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
-                        if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--' and self.spielbrett[sZ][sP+3] == '--':
-                            if (eZ, eP) == (0,4):
-                                erreichbareFelder.append((sZ, sP+4))
-                                self.rochadeGroßSchwarz = True
-
-                if sZ == 0 and sP == 7:
-                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
-                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--':
-                            if (eZ, eP) == (0,4):
-                                self.rochadeKleinSchwarz = True
-                                erreichbareFelder.append((sZ, sP-3))
-
-
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
-
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+            
         gewünschtesFeld = ()
         erreichbareFelder = []
         return False
-
+    
+    #Es wird kontrolliert, ob mit dem Springer ein Zug gemacht werden kann.
     def kontrolliereSpringerZug(self, zeile, spalte):
         figur = self.spielbrett[zeile][spalte][:1]
         if self.zugWeiß:
@@ -753,7 +2022,7 @@ class SpielStand():#übernommen
                         return True
                 if (zeile < 6 and spalte < 7):
                     feld = self.spielbrett[zeile+2][spalte+1] #Springer springt zwei Felder nach unten und ein Felder nach rechts.
-                    if (feld[:1] != 'w'): 
+                    if (feld[:1] != 'w'):
                         return True
                 if (zeile < 6 and spalte > 0):
                     feld = self.spielbrett[zeile+2][spalte-1] #Springer springt zwei Felder nach unten und ein Felder nach links.
@@ -769,41 +2038,42 @@ class SpielStand():#übernommen
                         return True
 
         elif not self.zugWeiß:
-            if figur == 'g':
+            if figur == 's':
                 if (spalte < 7 and zeile > 1):
                     feld = self.spielbrett[zeile-2][spalte+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
-                    if feld[:1] != 'g': 
+                    if feld[:1] != 's': 
                         return True
                 if (spalte > 0 and zeile > 1):
                     feld = self.spielbrett[zeile-2][spalte-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile > 0 and spalte < 6):
                     feld = self.spielbrett[zeile-1][spalte+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile > 0 and spalte > 1):
                     feld = self.spielbrett[zeile-1][spalte-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile < 6 and spalte < 7):
                     feld = self.spielbrett[zeile+2][spalte+1] #Springer springt zwei Felder nach unten und ein Felder nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile < 6 and spalte > 0):
                     feld = self.spielbrett[zeile+2][spalte-1] #Springer springt zwei Felder nach unten und ein Felder nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile < 7 and spalte < 6):
                     feld = self.spielbrett[zeile+1][spalte+2] #Springer springt ein Feld nach unten und zwei Felder nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
                 if (zeile < 7 and spalte > 1):
                     feld = self.spielbrett[zeile+1][spalte-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         return True
 
-    def kontrolliereSpringer(self, sZ, sP, eZ, eP):
+    #Es wird kontrolliert, ob mit dem Springer der gewünschte Zug gemacht werden kann.
+    def kontrolliereSpringer(self, sZ, sP, eZ, eP, ki = False):
 
         gewünschtesFeld = (eZ, eP)
         erreichbareFelder = []
@@ -848,84 +2118,89 @@ class SpielStand():#übernommen
 
         elif not self.zugWeiß:
         
-            if figur == 'g':
+            if figur == 's':
 
                 if (sP < 7 and sZ > 1):
                     feld = self.spielbrett[sZ-2][sP+1] #Springer springt zwei Felder nach oben und ein Feld nach rechts.
-                    if feld[:1] != 'g': 
+                    if feld[:1] != 's': 
                         erreichbareFelder.append((sZ-2, sP+1))
                 if (sP > 0 and sZ > 1):
                     feld = self.spielbrett[sZ-2][sP-1] #Springer springt zwei Felder nach oben und ein Feld nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ-2, sP-1))
                 if (sZ > 0 and sP < 6):
                     feld = self.spielbrett[sZ-1][sP+2] #Springer springt ein Feld nach oben und zwei Felder nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ-1, sP+2))
                 if (sZ > 0 and sP > 1):
                     feld = self.spielbrett[sZ-1][sP-2] #Springer springt ein Feld nach oben und zwei Felder nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ-1, sP-2))
                 if (sZ < 6 and sP < 7):
                     feld = self.spielbrett[sZ+2][sP+1] #Springer springt zwei Felder nach unten und ein Feld nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ+2, sP+1))
                 if (sZ < 6 and sP > 0):
                     feld = self.spielbrett[sZ+2][sP-1] #Springer springt zwei Felder nach unten und ein Feld nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ+2, sP-1))
                 if (sZ < 7 and sP < 6):
                     feld = self.spielbrett[sZ+1][sP+2] #Springer springt ein Feld nach unten und zwei Feld nach rechts.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ+1, sP+2))
                 if (sZ < 7 and sP > 1):
                     feld = self.spielbrett[sZ+1][sP-2] #Springer springt ein Feld nach unten und zwei Felder nach links.
-                    if (feld[:1] != 'g'): 
+                    if (feld[:1] != 's'): 
                         erreichbareFelder.append((sZ+1, sP-2))
 
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
-
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+            
         gewünschtesFeld = ()
         erreichbareFelder = []
         return False
 
+    #Es wird kontrolliert, ob der Läufer einen Zug machen kann
     def kontrolliereLäuferZug(self, zeile, spalte):
 
         figur = self.spielbrett[zeile][spalte][:1]
         if self.zugWeiß:
             if figur == 'w':
                 
-                if zeile < 0 and spalte > 0:
-                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'g':
+                if zeile < 0 and spalte > 0: #Oben links
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 's':
                         return True
-                if zeile < 0 and spalte < 7:
-                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'g':
+                if zeile < 0 and spalte < 7: #Oben rechts
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 's':
                         return True
-                if zeile < 7 and spalte > 0:
-                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'g':
+                if zeile < 7 and spalte > 0: #Unten links
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 's':
                         return True
-                if zeile < 7 and spalte < 7:
-                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'g':
+                if zeile < 7 and spalte < 7: #unten rechts
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 's':
                         return True
         else:
-            if figur == 'g':
+            if figur == 's':
                 
-                if zeile < 0 and spalte > 0:
+                if zeile < 0 and spalte > 0: #Oben links
                     if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'w':
                         return True
-                if zeile < 0 and spalte < 7:
+                if zeile < 0 and spalte < 7: #Oben rechts
                     if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'w':
                         return True
-                if zeile < 7 and spalte > 0:
+                if zeile < 7 and spalte > 0: #Oben links
                     if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'w':
                         return True
-                if zeile < 7 and spalte < 7:
+                if zeile < 7 and spalte < 7: #Oben rechts
                     if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'w':
                         return True    
 
-    def kontrolliereLäufer(self, sZ, sP, eZ, eP):
+    #Es wird kontrolliert, ob der gewünschte Zug mit dem Läufer möglich ist.
+    def kontrolliereLäufer(self, sZ, sP, eZ, eP, ki = False):
         
         pHilfLinksOben = 1
         pHilfLinksUnten = 1
@@ -949,17 +2224,17 @@ class SpielStand():#übernommen
                 
                     if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'):
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'w'): #Eine weiße Figur, Abbruch
                         pHilfLinksOben = 1
                         zHilfObenLinks = 1
                         break
-                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
-                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 's'): #Eine schwarze Figur, Feld ist erreichbar
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))  #Es wird zum Array hinzugefügt
                         pHilfLinksOben = 1
                         zHilfObenLinks = 1
                         break
-                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):
-                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben] == '--'):  #Das Feld ist leer. Es ist erreichbar und
+                        erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))#wird zum Array hinzugefügt.
                         pHilfLinksOben+=1
                         zHilfObenLinks+=1
 
@@ -968,17 +2243,17 @@ class SpielStand():#übernommen
                     
                     if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'):
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'w'): #Eine weiße Figur, Abbruch
+                        pHilfRechtsOben = 1                                                 
+                        zHilfObenRechts = 1
+                        break
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 's'): #Eine schwarze Figur, Feld ist erreichbar
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))  #Es wird zum Array hinzugefügt
                         pHilfRechtsOben = 1
                         zHilfObenRechts = 1
                         break
-                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
-                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
-                        pHilfRechtsOben = 1
-                        zHilfObenRechts = 1
-                        break
-                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'):
-                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben] == '--'): #Das Feld ist leer. Es ist erreichbar und
+                        erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))#wird zum Array hinzugefügt.
                         pHilfRechtsOben+=1
                         zHilfObenRechts+=1
 
@@ -991,7 +2266,7 @@ class SpielStand():#übernommen
                         pHilfLinksUnten = 1
                         zHilfUntenLinks = 1
                         break
-                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 's'):
                         erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
                         pHilfLinksUnten=1
                         zHilfUntenLinks = 1
@@ -1010,7 +2285,7 @@ class SpielStand():#übernommen
                         pHilfRechtsUnten = 1
                         zHilfUntenRechts = 1
                         break
-                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 's'):
                         erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
                         pHilfRechtsUnten = 1
                         zHilfUntenRechts = 1
@@ -1022,14 +2297,14 @@ class SpielStand():#übernommen
             
         elif not self.zugWeiß:
             
-            if figur == 'g':
+            if figur == 's':
     
                 #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
                 while True:
                 
                     if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 's'):
                         pHilfLinksOben = 1
                         zHilfObenLinks = 1
                         break
@@ -1048,7 +2323,7 @@ class SpielStand():#übernommen
                     
                     if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 's'):
                         pHilfRechtsOben = 1
                         zHilfObenRechts = 1
                         break
@@ -1067,7 +2342,7 @@ class SpielStand():#übernommen
                 
                     if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
                         break
-                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 's'):
                         pHilfLinksUnten = 1
                         zHilfUntenLinks = 1
                         break
@@ -1086,7 +2361,7 @@ class SpielStand():#übernommen
                     
                     if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
                         break
-                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 's'):
                         pHilfRechtsUnten = 1
                         zHilfUntenRechts = 1
                         break
@@ -1100,48 +2375,53 @@ class SpielStand():#übernommen
                         pHilfRechtsUnten+=1
                         zHilfUntenRechts+=1
                     
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
-
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+            
         gewünschtesFeld = ()
         erreichbareFelder = []
-        return False    
+        return False 
 
+    #Es wird kontrolliert, ob der König oder die Dame einen Zug machen können. Sowohl der König als auch die Dame müssen nur 
+    #einen Schritt in jede beliebige Richtung machen können.
     def kontrolliereDameUndKönigZug(self, zeile, spalte):
 
         figur = self.spielbrett[zeile][spalte][:1]
         if self.zugWeiß:
             if figur == 'w':
                 if spalte > 0 :
-                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'g':
+                    if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 's':
                         return True
                 if spalte < 7:
-                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 'g':
+                    if self.spielbrett[zeile][spalte+1] == '--' or self.spielbrett[zeile][spalte+1][:1] == 's':
                         return True
                 if zeile > 0:
-                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 'g':
+                    if self.spielbrett[zeile-1][spalte] == '--' or self.spielbrett[zeile-1][spalte][:1] == 's':
                         return True
                 if zeile < 7:
-                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 'g':
+                    if self.spielbrett[zeile+1][spalte] == '--' or self.spielbrett[zeile+1][spalte][:1] == 's':
                         return True
                     
                 if zeile < 0 and spalte > 0:
-                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 'g':
+                    if self.spielbrett[zeile-1][spalte-1] == '--' or self.spielbrett[zeile-1][spalte-1][:1] == 's':
                         return True
                 if zeile < 0 and spalte < 7:
-                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 'g':
+                    if self.spielbrett[zeile-1][spalte+1] == '--' or self.spielbrett[zeile-1][spalte+1][:1] == 's':
                         return True
                 if zeile < 7 and spalte > 0:
-                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 'g':
+                    if self.spielbrett[zeile+1][spalte-1] == '--' or self.spielbrett[zeile+1][spalte-1][:1] == 's':
                         return True
                 if zeile < 7 and spalte < 7:
-                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'g':
+                    if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 's':
                         return True
 
         elif not self.zugWeiß:
 
-            if figur == 'g':
+            if figur == 's':
                 if spalte > 0 :
                     if self.spielbrett[zeile][spalte-1] == '--' or self.spielbrett[zeile][spalte-1][:1] == 'w':
                         return True
@@ -1168,7 +2448,8 @@ class SpielStand():#übernommen
                     if self.spielbrett[zeile+1][spalte+1] == '--' or self.spielbrett[zeile+1][spalte+1][:1] == 'w':
                         return True       
 
-    def kontrolliereDame(self, sZ, sP, eZ, eP):        
+    #Es wird kontrolliert, ob der gewünschte Zug mit der Dame möglich ist.
+    def kontrolliereDame(self, sZ, sP, eZ, eP, ki = False):        
         
         pHilfLinks = 1
         pHilfRechts = 1
@@ -1192,14 +2473,14 @@ class SpielStand():#übernommen
 
             if figur == 'w':
 
-                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich in die linke Richtung bewegen kann und falls ja, wie weit.
                 while True:
                     
                     if (sP-pHilfLinks >= 0):   
                         if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
                             pHilfLinks = 1
                             break
-                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                        if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 's'):
                             erreichbareFelder.append((sZ, sP-pHilfLinks))
                             pHilfLinks=1
                             break
@@ -1209,7 +2490,7 @@ class SpielStand():#übernommen
                     else:
                         break
 
-                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich in die rechte Richtung bewegen kann und falls ja, wie weit.
                 while True:
                 
                     if (sP+pHilfRechts <= 7): 
@@ -1217,7 +2498,7 @@ class SpielStand():#übernommen
                         if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
                             pHilfRechts = 1
                             break
-                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                        if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 's'):
                             erreichbareFelder.append((sZ, sP+pHilfRechts))
                             pHilfRechts=1
                             break
@@ -1227,13 +2508,13 @@ class SpielStand():#übernommen
                     else:
                         break             
 
-                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich nach oben bewegt und falls ja, wie weit.
                 while True:
                     if sZ - zHilfOben >= 0:
                         if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
                             zHilfOben = 1
                             break
-                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                        if(self.spielbrett[sZ-zHilfOben][sP][:1] == 's'):
                             erreichbareFelder.append((sZ-zHilfOben, sP))
                             zHilfOben=1
                             break
@@ -1243,14 +2524,14 @@ class SpielStand():#übernommen
                     else:
                         break
 
-                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich nach unten bewegt und falls ja, wie weit.
                 while True:
                     
                     if sZ+zHilfUnten <= 7:
                         if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
                             zHilfUnten=1
                             break
-                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                        if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 's'):
                             erreichbareFelder.append((sZ+zHilfUnten, sP))
                             zHilfUnten=1
                             break
@@ -1261,7 +2542,7 @@ class SpielStand():#übernommen
                         zHilfUnten=1
                         break
 
-                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
                 while True:
                 
                     if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
@@ -1270,7 +2551,7 @@ class SpielStand():#übernommen
                         pHilfLinksOben = 1
                         zHilfObenLinks = 1
                         break
-                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                    if(self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 's'):
                         erreichbareFelder.append((sZ-zHilfObenLinks, sP-pHilfLinksOben))
                         pHilfLinksOben=1
                         zHilfObenLinks = 1
@@ -1280,7 +2561,7 @@ class SpielStand():#übernommen
                         pHilfLinksOben+=1
                         zHilfObenLinks+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
                 while True:
                     
                     if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
@@ -1289,7 +2570,7 @@ class SpielStand():#übernommen
                         pHilfRechtsOben = 1
                         zHilfObenRechts = 1
                         break
-                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                    if(self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 's'):
                         erreichbareFelder.append((sZ-zHilfObenRechts, sP+pHilfRechtsOben))
                         pHilfRechtsOben = 1
                         zHilfObenRechts = 1
@@ -1299,7 +2580,7 @@ class SpielStand():#übernommen
                         pHilfRechtsOben+=1
                         zHilfObenRechts+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
                 while True:
                 
                     if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
@@ -1308,7 +2589,7 @@ class SpielStand():#übernommen
                         pHilfLinksUnten = 1
                         zHilfUntenLinks = 1
                         break
-                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                    if(self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 's'):
                         erreichbareFelder.append((sZ+zHilfUntenLinks, sP-pHilfLinksUnten))
                         pHilfLinksUnten=1
                         zHilfUntenLinks = 1
@@ -1318,7 +2599,7 @@ class SpielStand():#übernommen
                         pHilfLinksUnten+=1
                         zHilfUntenLinks+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
                 while True:
                     
                     if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
@@ -1327,7 +2608,7 @@ class SpielStand():#übernommen
                         pHilfRechtsUnten = 1
                         zHilfUntenRechts = 1
                         break
-                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                    if(self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 's'):
                         erreichbareFelder.append((sZ+zHilfUntenRechts, sP+pHilfRechtsUnten))
                         pHilfRechtsUnten = 1
                         zHilfUnten = 1
@@ -1340,13 +2621,13 @@ class SpielStand():#übernommen
 
         elif not self.zugWeiß:
 
-            if figur == 'g':
+            if figur == 's':
 
-                #Es wird geguckt, ob der Turm sich in die linke Richtung bewegen kann und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich in die linke Richtung bewegen kann und falls ja, wie weit.
                 while True:
                     
                     if (sP-pHilfLinks >= 0):   
-                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 'g'):
+                        if (self.spielbrett[sZ][sP-pHilfLinks][:1] == 's'):
                             pHilfLinks = 1
                             break
                         if(self.spielbrett[sZ][sP-pHilfLinks][:1] == 'w'):
@@ -1359,12 +2640,12 @@ class SpielStand():#übernommen
                     else:
                         break
 
-                #Es wird geguckt, ob der Turm sich in die rechte Richtung bewegen kann und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich in die rechte Richtung bewegen kann und falls ja, wie weit.
                 while True:
                 
                     if (sP+pHilfRechts <= 7): 
                         
-                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 'g'):
+                        if (self.spielbrett[sZ][sP+pHilfRechts][:1] == 's'):
                             pHilfRechts = 1
                             break
                         if(self.spielbrett[sZ][sP+pHilfRechts][:1] == 'w'):
@@ -1377,10 +2658,10 @@ class SpielStand():#übernommen
                     else:
                         break             
 
-                #Es wird geguckt, ob der Turm sich nach oben bewegt und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich nach oben bewegt und falls ja, wie weit.
                 while True:
                     if sZ - zHilfOben >= 0:
-                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 'g'):
+                        if (self.spielbrett[sZ-zHilfOben][sP][:1] == 's'):
                             zHilfOben = 1
                             break
                         if(self.spielbrett[sZ-zHilfOben][sP][:1] == 'w'):
@@ -1393,11 +2674,11 @@ class SpielStand():#übernommen
                     else:
                         break
 
-                #Es wird geguckt, ob der Turm sich nach unten bewegt und falls ja, wie weit.
+                #Es wird geguckt, ob die Dame sich nach unten bewegt und falls ja, wie weit.
                 while True:
                    
                     if sZ+zHilfUnten <= 7:
-                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 'g'):
+                        if (self.spielbrett[sZ+zHilfUnten][sP][:1] == 's'):
                             zHilfUnten=1
                             break
                         if(self.spielbrett[sZ+zHilfUnten][sP][:1] == 'w'):
@@ -1411,12 +2692,12 @@ class SpielStand():#übernommen
                         zHilfUnten=1
                         break
 
-                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge linke Richtung nach oben bewegen kann und falls ja, wie viel
                 while True:
                 
                     if (sP-pHilfLinksOben < 0 or sZ-zHilfObenLinks < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 'g'):
+                    if (self.spielbrett[sZ-zHilfObenLinks][sP-pHilfLinksOben][:1] == 's'):
                         pHilfLinksOben = 1
                         zHilfObenLinks = 1
                         break
@@ -1430,12 +2711,12 @@ class SpielStand():#übernommen
                         pHilfLinksOben+=1
                         zHilfObenLinks+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge rechte Richtung nach oben bewegen kann und falls ja, wie viel
                 while True:
                     
                     if (sP+pHilfRechtsOben > 7 or sZ-zHilfObenRechts < 0): 
                         break
-                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 'g'):
+                    if (self.spielbrett[sZ-zHilfObenRechts][sP+pHilfRechtsOben][:1] == 's'):
                         pHilfRechtsOben = 1
                         zHilfObenRechts = 1
                         break
@@ -1449,12 +2730,12 @@ class SpielStand():#übernommen
                         pHilfRechtsOben+=1
                         zHilfObenRechts+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge linke Richtung nach unten bewegen kann und falls ja, wie viel
                 while True:
                 
                     if (sP-pHilfLinksUnten < 0 or sZ+zHilfUntenLinks > 7): 
                         break
-                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 'g'):
+                    if (self.spielbrett[sZ+zHilfUntenLinks][sP-pHilfLinksUnten][:1] == 's'):
                         pHilfLinksUnten = 1
                         zHilfUntenLinks = 1
                         break
@@ -1468,12 +2749,12 @@ class SpielStand():#übernommen
                         pHilfLinksUnten+=1
                         zHilfUntenLinks+=1
 
-                #Es wird geguckt, ob der Läufer sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
+                #Es wird geguckt, ob die Dame sich in die schräge rechte Richtung nach unten bewegen kann und falls ja, wie viel
                 while True:
                     
                     if (sP+pHilfRechtsUnten > 7 or sZ+zHilfUntenRechts > 7): 
                         break
-                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 'g'):
+                    if (self.spielbrett[sZ+zHilfUntenRechts][sP+pHilfRechtsUnten][:1] == 's'):
                         pHilfRechtsUnten = 1
                         zHilfUntenRechts = 1
                         break
@@ -1487,19 +2768,24 @@ class SpielStand():#übernommen
                         pHilfRechtsUnten+=1
                         zHilfUntenRechts+=1
 
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
-
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+            
         gewünschtesFeld = ()
         erreichbareFelder = []
         return False
 
-    def kontrolliereKönig(self, sZ, sP, eZ, eP):
+    #Es wird kontrolliert, ob der gewünschte Zug mit dem König gemacht werden kann.
+    def kontrolliereKönig(self, sZ, sP, eZ, eP, ki = False):
         
         gewünschtesFeld = (eZ, eP)
         erreichbareFelder = []
         figur = self.spielbrett[sZ][sP][:1]
+        rochadeHilf = True
 
         if self.zugWeiß:
 
@@ -1537,72 +2823,138 @@ class SpielStand():#übernommen
                     if self.spielbrett[sZ][sP-1][:1] != 'w': #König wird ein Feld nach links bewegt.
                         erreichbareFelder.append((sZ, sP-1))
 
-                if sZ == 7 and sP == 4:
-                    if self.TurmWeißLinksBenutzt == False and self.KönigWeißBenutzt == False:
-                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
-                            if (eZ,eP) == (7,0):
-                                erreichbareFelder.append((sZ, sP-4))
-                                self.rochadeGroßWeiß = True
-
-                    if self.TurmWeißRechtsBenutzt == False and self.KönigWeißBenutzt == False:
+                #Hier sehen wir die Bedingung für die kleine Rochade von Weiß
+                if sZ == 7 and sP == 4: #and eZ==7 and eP==6:
+                    #Der Turm und der Könog dürfen nicht benutzt sein, um eine Rochade ausführen zu können.
+                    if self.TurmWeißRechtsBenutzt == False and self.KönigWeißBenutzt == False and self.spielbrett[7][7] == 'wT':
+                        #Sind die Felder rechts leer?
                         if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--':
-                            if (eZ,eP) == (7,7):
-                                erreichbareFelder.append((sZ, sP+3))  
-                                self.rochadeKleinWeiß = True  
+                            for i in range(4,7):
+                                #Gibt es eine gegnerische Figur, die in den Bereich der Rochade laufen kann?
+                                if not self.kontrollHilfeRochade(i):
+                                    rochadeHilf = False
+                                    break
+                            #Sind alle Bedingungen erfüllt, so wird die Variable auf True gesetzt, damit in der Methode
+                            #macheZug die Rochade ausgeführt wird. 
+                            if rochadeHilf:
+                                erreichbareFelder.append((sZ, sP+2))
+
+                                if self.möglicheFolgeStellungFürKI:
+                                    self.rochadeKleinWeißKIHilf = True
+                                else:
+                                    if eZ == 7 and eP == 6:
+                                        self.rochadeKleinWeiß = True
+                                        self.KönigWeißBenutzt = True
+                                        self.TurmWeißRechtsBenutzt = True
+                            else:
+                                rochadeHilf = True
+                
+                    #Hier sehen wir die Bedingungen für die große Rochade von Weiß
+                    if self.TurmWeißLinksBenutzt == False and self.KönigWeißBenutzt == False and self.spielbrett[7][0] == 'wT':
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
+                            for i in range(2,5):
+                                if not self.kontrollHilfeRochade(i):
+                                    rochadeHilf = False
+                                    break
+                            
+                            if rochadeHilf:
+                                erreichbareFelder.append((sZ, sP-2))
+
+                                if self.möglicheFolgeStellungFürKI:
+                                    self.rochadeGroßWeißKIHilf = True
+                                else:
+                                    if eZ == 7 and eP == 2:
+                                        self.rochadeGroßWeiß = True
+                                        self.KönigWeißBenutzt = True
+                                        self.TurmWeißLinksBenutzt = True
+                            else:
+                                rochadeHilf = True
 
         elif not self.zugWeiß:
 
-            if figur == 'g':
+            if figur == 's':
         
                 if sZ > 0:
-                    if self.spielbrett[sZ-1][sP][:1] != 'g': #König wird ein Feld nach oben bewegt.
+                    if self.spielbrett[sZ-1][sP][:1] != 's': #König wird ein Feld nach oben bewegt.
                         erreichbareFelder.append((sZ-1, sP))
                 
                 if sZ > 0 and sP > 0: 
-                    if self.spielbrett[sZ-1][sP-1][:1] != 'g': #König wird ein Feld nach oben und ein Feld nach links bewegt.
+                    if self.spielbrett[sZ-1][sP-1][:1] != 's': #König wird ein Feld nach oben und ein Feld nach links bewegt.
                         erreichbareFelder.append((sZ-1, sP-1))
                 
                 if sZ > 0 and sP < 7:
-                    if self.spielbrett[sZ-1][sP+1][:1] != 'g': #König wird ein Feld nach oben und ein Feld nach rechts bewegt.
+                    if self.spielbrett[sZ-1][sP+1][:1] != 's': #König wird ein Feld nach oben und ein Feld nach rechts bewegt.
                         erreichbareFelder.append((sZ-1, sP+1))
                 
                 if sP < 7:
-                    if self.spielbrett[sZ][sP+1][:1] != 'g': #König wird ein Feld nach rechts bewegt.
+                    if self.spielbrett[sZ][sP+1][:1] != 's': #König wird ein Feld nach rechts bewegt.
                         erreichbareFelder.append((sZ, sP+1))
                 
                 if sZ < 7 and sP < 7:
-                    if self.spielbrett[sZ+1][sP+1][:1] != 'g': #König wird ein Feld nach unten und ein Feld nach rechts bewegt.
+                    if self.spielbrett[sZ+1][sP+1][:1] != 's': #König wird ein Feld nach unten und ein Feld nach rechts bewegt.
                         erreichbareFelder.append((sZ+1, sP+1))
 
                 if sZ < 7:
-                    if self.spielbrett[sZ+1][sP][:1] != 'g': #König wird ein Feld nach unten bewegt.
+                    if self.spielbrett[sZ+1][sP][:1] != 's': #König wird ein Feld nach unten bewegt.
                         erreichbareFelder.append((sZ+1, sP))
 
                 if sZ < 7 and sP > 0:        
-                    if self.spielbrett[sZ+1][sP-1][:1] != 'g': #König wird ein Feld nach unten und ein Feld nach links bewegt.
+                    if self.spielbrett[sZ+1][sP-1][:1] != 's': #König wird ein Feld nach unten und ein Feld nach links bewegt.
                         erreichbareFelder.append((sZ+1, sP-1))
 
                 if sP > 0:
-                    if self.spielbrett[sZ][sP-1][:1] != 'g': #König wird ein Feld nach links bewegt.
-                        erreichbareFelder.append((sZ, sP-1))
+                    if self.spielbrett[sZ][sP-1][:1] != 's': #König wird ein Feld nach links bewegt.
+                        erreichbareFelder.append((sZ, sP-1)) 
 
+                #Hier haben wir den Code für die Rochade von Schwarz
                 if sZ == 0 and sP == 4:
-                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False:
-                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
-                            if (eZ,eP) == (0,0):
-                                erreichbareFelder.append((sZ, sP-4))
-                                self.rochadeGroßSchwarz = True
-
-                    if self.TurmSchwarzRechtsBenutzt == False and self.KönigSchwarzBenutzt == False:
+                    if self.TurmSchwarzRechtsBenutzt == False and self.KönigSchwarzBenutzt == False and self.spielbrett[0][7] == 'sT':
                         if self.spielbrett[sZ][sP+1] == '--' and self.spielbrett[sZ][sP+2] == '--':
-                            if (eZ,eP) == (0,7):    
-                                erreichbareFelder.append((sZ, sP+3))
-                                self.rochadeKleinSchwarz = True    
+                                for i in range(4,7):
+                                    if not self.kontrollHilfeRochade(i):
+                                        rochadeHilf = False
+                                        break
+                                
+                                if rochadeHilf:
+                                    erreichbareFelder.append((sZ, sP+2))
 
-        for x in erreichbareFelder:
-            if gewünschtesFeld == x:
-                return True
+                                    if self.möglicheFolgeStellungFürKI:
+                                        self.rochadeKleinSchwarzKIHilf = True
+                                    else:
+                                        if eZ == 0 and eP == 6:
+                                            self.rochadeKleinSchwarz = True
+                                            self.KönigSchwarzBenutzt = True
+                                            self.TurmSchwarzRechtsBenutzt = True
+                                else:
+                                    rochadeHilf = True
 
+                    if self.TurmSchwarzLinksBenutzt == False and self.KönigSchwarzBenutzt == False and self.spielbrett[0][0] == 'sT':
+                        if self.spielbrett[sZ][sP-1] == '--' and self.spielbrett[sZ][sP-2] == '--' and self.spielbrett[sZ][sP-3] == '--':
+                            for i in range(2,5):
+                                if not self.kontrollHilfeRochade(i):
+                                    rochadeHilf = False
+                                    break
+                            
+                            if rochadeHilf:
+                                erreichbareFelder.append((sZ, sP-2))
+
+                                if self.möglicheFolgeStellungFürKI:
+                                    self.rochadeGroßSchwarzKIHilf = True
+                                else:
+                                    if eZ == 0 and eP == 2:
+                                        self.rochadeGroßSchwarz = True
+                                        self.KönigSchwarzBenutzt = True
+                                        self.TurmSchwarzLinksBenutzt = True
+                            else:
+                                rochadeHilf = True
+
+        if ki is True:
+            return erreichbareFelder
+        else:
+            for x in erreichbareFelder:
+                if gewünschtesFeld == x:
+                    return True
+            
         gewünschtesFeld = ()
         erreichbareFelder = []
         return False
