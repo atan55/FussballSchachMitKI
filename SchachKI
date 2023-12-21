@@ -37,8 +37,8 @@ class Baum():
                     listeZugInformationen.extend([k.startZeile, k.startSpalte, k.endZeile, k.endSpalte, k.bewegteFigur, k.löscheBauern])
                     return listeZugInformationen
 
-    def minimax(self, knoten, maxSpieler, alpha, beta):
-        
+    def minimax(self, knoten, maxSpieler, alpha, beta): #Diese Methode wurde aus dem Internet übernommen und wurde
+                                                        #angepasst. Der Link: https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/
         if len(knoten.kinder) == 0:
             return knoten.punkte
 
@@ -77,13 +77,11 @@ class Baum():
 
         #print("lllll")
         for l in listeZuLöschenderKnoten:
-            #print("mmmmm")
             #print(l.spielbrett)
             liste1.remove(l)
         listeZuLöschenderKnoten.clear()
 
         listeEbeneX = liste1.copy()
-        #print("sssss")
         #for l in listeEbeneX:
         #    print(l.spielbrett)
         #print("Laenge l: ", len(listeEbeneX), " Laenge l2: ", len(self.listeEbene1))
@@ -95,7 +93,6 @@ class Baum():
                 l.ermittleAlleMöglichenZüge(kopieKnoten, liste2, liste1, listeZuLöschenderKnoten, False)
 
             for l in listeZuLöschenderKnoten:
-                #print("22222")
                 liste2.remove(l)
             listeZuLöschenderKnoten.clear()
 
