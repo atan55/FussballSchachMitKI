@@ -1,16 +1,19 @@
-import pygame as p #Eine Bibliothek von Python für die Entwicklung von Multimedia-Anwendungen   #übernommen
-import SchachStandAktualisierung   
-import pygame_widgets
-from pygame_widgets.button import Button
+import pygame as p #Eine Bibliothek von Python für die Entwicklung von Multimedia-Anwendungen   
+import SchachStandAktualisierung
+from SchachStandAktualisierung import Variablen  
+import pygame_widgets 
+from pygame_widgets.button import Button 
+from SchachKI import Baum
+import time as t
 
-HÖHE = 515 #Höhe und Breite in Pixel    #übernommen
-BREITE = 800#übernommen
-DIMENSION = 8 #Ein Schachbrett hat 8*8=64 Felder.#übernommen
-V_GRÖßE = HÖHE // DIMENSION #512/8=64. Ein Feld hat die Länge und die Breite von 64 Pixel.  #übernommen
-BILDER = {} #Dictionary, indem später die Schachfirguren gespeichert werden #übernommen
+HÖHE = 512 #Höhe und Breite in Pixel    
+BREITE = 800
+DIMENSION = 8 #Ein Schachbrett hat 8*8=64 Felder.
+V_GRÖßE = HÖHE // DIMENSION #512/8=64. Ein Feld hat die Länge und die Breite von 64 Pixel.  
+BILDER = {} #Dictionary, indem später die Schachfirguren gespeichert werden 
 
-def ladeBilder():#übernommen
-    figuren = ['gT', 'gP', 'gL', 'gD', 'gK', 'gB', 'wT', 'wP', 'wL', 'wD', 'wK', 'wB']
+def ladeBilder():
+    figuren = ['sT', 'sP', 'sL', 'sD', 'sK', 'sB', 'wT', 'wP', 'wL', 'wD', 'wK', 'wB']
     for figur in figuren:
         #Die Bilder werden vom Ordner geladen und sklaiert. Sie bekommen die Länge und die Breite von 64 Pixel. 
         #Im Dictionary werden sie mir ihrer jeweiligen Bezeichnung abgespeichert.
@@ -18,24 +21,28 @@ def ladeBilder():#übernommen
 
 def main():
 
-    p.init() #Diese Zeile kann weggelassen werden.  #übernommen
-    bildschirm = p.display.set_mode((BREITE, HÖHE)) #Es wird ein sichtbares Fenster mit ihrer jeweiligen Höhe und Breite erstellt.  #übernommen
-    sps = SchachStandAktualisierung.SpielStand() #Diese Klasse kontrolliert den Spielstatus und die Züge der einzelnen Figuren  #übernommen
-    ladeBilder() #Die Bilder werden geladen.  #übernommen
-    läuft = True #So lange der Spieler das Spiel nicht beendet, bleibt dieser Wert True.  #übernommen
-    ausgewähltesRechteck = () #In diesem Tupel werden die Koordinaten des ausgewählten Rechtecks gespeichert. Immer nur von einem Rechteck  #übernommen
-    spielerKlicks = [] #Hier werden auch die Koordinaten des ausgewählten Rechtecks gespeichert, jedoch maximal von zwei.  #übernommen
-    spalte, zeile = 0,0#übernommen
-    aktualisiere = False#übernommen
-    zeichneSpielstand(bildschirm, sps)#übernommen
-    p.display.flip()#übernommen
-
+    ###
+    #Vorbereitung
+    p.init() #Diese Zeile kann weggelassen werden.  
+    bildschirm = p.display.set_mode((BREITE, HÖHE)) #Es wird ein sichtbares Fenster mit ihrer jeweiligen Höhe und Breite erstellt.  
+    sps = SchachStandAktualisierung.SpielStand() #Diese Klasse kontrolliert den Spielstatus und die Züge der einzelnen Figuren  
+    v = Variablen()
+    ladeBilder() #Die Bilder werden geladen.  
+    läuft = True #So lange der Spieler das Spiel nicht beendet, bleibt dieser Wert True.  
+    ausgewähltesRechteck = () #In diesem Tupel werden die Koordinaten des ausgewählten Rechtecks gespeichert. Immer nur von einem Rechteck  
+    spielerKlicks = [] #Hier werden auch die Koordinaten des ausgewählten Rechtecks gespeichert, jedoch maximal von zwei.  
+    aktualisiere = False
+    zeichneSpielstand(bildschirm, sps)
+    p.display.flip()
 
     #Der Text für die Tore der KI werden angezeigt
     tfont = p.font.SysFont("monospace", 30)
     SCHWARZ = (0, 0, 0)
 
-    taste = Button(#übernommen
+    #Tasten zum Neustarten und beenden des Spiels
+    #Der Code für beide tasten wurde aus dem Internet übernommen.
+    #Der Link: https://pygamewidgets.readthedocs.io/en/latest/widgets/button/ 
+    taste = Button(
         # Mandatory Parameters
         bildschirm,  # Surface to place taste on
         565,  # X-coordinate of top left corner
@@ -47,14 +54,14 @@ def main():
         text='Neustart',  # Text to display
         fontSize=20,  # Size of font
         margin=20,  # Minimum distance between text/image and edge of taste
-        inactiveColour=(100, 230, 0),  # Colour of taste when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of taste when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of taste when being clicked
+        inactiveColour=p.Color("silver"),#(100, 230, 0),  # Colour of taste when not being interacted with
+        hoverColour=p.Color("dimgrey"),#(150, 0, 0),  # Colour of taste when being hovered over
+        pressedColour=p.Color("goldenrod"),#(0, 200, 20),  # Colour of taste when being clicked
         radius=20,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: starteSpielErneutOderBeende('j',sps)  # Function to call when clicked on
+        onClick=lambda: starteSpielErneutOderBeende('j',sps)  
     )
 
-    taste2 = Button(#übernommen
+    taste2 = Button(
         # Mandatory Parameters
         bildschirm,  # Surface to place taste on
         665,  # X-coordinate of top left corner
@@ -66,202 +73,491 @@ def main():
         text='Beenden',  # Text to display
         fontSize=20,  # Size of font
         margin=20,  # Minimum distance between text/image and edge of taste
-        inactiveColour=(100, 230, 0),  # Colour of taste when not being interacted with
-        hoverColour=(150, 0, 0),  # Colour of taste when being hovered over
-        pressedColour=(0, 200, 20),  # Colour of taste when being clicked
+        inactiveColour=p.Color("silver"),#(100, 230, 0),  # Colour of taste when not being interacted with
+        hoverColour=p.Color("dimgrey"),#(150, 0, 0),  # Colour of taste when being hovered over
+        pressedColour=p.Color("goldenrod"),#(0, 200, 20),  # Colour of taste when being clicked
         radius=20,  # Radius of border corners (leave empty for not curved)
-        onClick=lambda: starteSpielErneutOderBeende('n',sps)  # Function to call when clicked on
+        onClick=lambda: starteSpielErneutOderBeende('n',sps)  
     )
 
-    while läuft:#übernommen
-        if aktualisiere:#übernommen
+    while läuft:
 
-            startZeile = spielerKlicks[0][0]#übernommen
-            startSpalte = spielerKlicks[0][1]#übernommen
-            endZeile = spielerKlicks[1][0]#übernommen
-            endSpalte = spielerKlicks[1][1]#übernommen
-            bewegteFigur = sps.spielbrett[startZeile][startSpalte]#übernommen 
-
-            sps.definiereZugAttribute(startZeile, startSpalte, endZeile, endSpalte, bewegteFigur)#übernommen
-
-            if(sps.kontrolliere() == True):
-
-                if sps.zugWeiß:#Die Variable zugWeiß wurde übernommen und es wird an vielen Stellen im Code verwendet.
-                    if endZeile == 0 and endSpalte == 3:# Es wird nicht jedes Mal gekenzzeichnet werden, weil es oft vorkommt.
-                        sps.Tor = True
-                    elif endZeile == 0 and endSpalte == 4:
-                        sps.Tor = True
-                elif not sps.zugWeiß:
-                    if endZeile == 7 and endSpalte == 3:
-                        sps.Tor = True
-                    elif endZeile == 7 and endSpalte == 4:
-                        sps.Tor = True
-
-                aktualisiereFelder(bildschirm, sps)#übernommen
-                sps.macheZug()#übernommen 
-                sps.zugWeiß = not sps.zugWeiß#übernommen
-
-                if sps.kontrolliereZugMöglichkeit() == False:
-                    sps.spielBeendet = True
+        if v.starteSpiel == False:
+            for e in p.event.get():
+                pygame_widgets.update(e) #Die Buttons werden aktualisiert
+                p.display.update()
+                #Falls im Fenster auf x geklickt wird, wird das Spiel beendet 
+                if e.type == p.QUIT:
+                    läuft = False
+                #Das Spiel kann immer neugestartet und beendet werden. Beim Beenden wird das Fenster komplett geschlossen. 
+                elif sps.starteOderBeendeSpiel == 'j':
                     
-                textKITore = tfont.render(str(sps.ToreSchwarz), 30, SCHWARZ)
-                bildschirm.fill(p.Color("white"), (647, 60, 50, 30))
-                bildschirm.blit(textKITore, (647, 60)) 
+                    v = Variablen()
+                    sps = SchachStandAktualisierung.SpielStand()
+                    starteNeu(sps, v)
 
-                textSpTore = tfont.render(str(sps.ToreWeiß), 30, SCHWARZ)
-                bildschirm.fill(p.Color("white"), (647, 410, 50, 30))
-                bildschirm.blit(textSpTore, (647, 410)) 
-            else:
-                print("Dieser Zug kann nicht ausgeführt werden!")
-           
+                elif sps.starteOderBeendeSpiel == 'n':
+                    läuft = False
+                elif e.type == p.KEYDOWN:
+                    if e.key == p.K_k:
+                        v.vsKI = True
+                        v.vsMensch = False
+                        v.starteSpiel = True
+                    elif e.key == p.K_m:
+                        v.vsMensch = True
+                        v.vsKI = False
+                        v.starteSpiel = True
 
-            ausgewähltesRechteck = ()#übernommen 
-            spielerKlicks = []#übernommen
-            aktualisiere = False#übernommen
-                
-            p.display.update() #Nur der notwendige Teil des Displays soll aktualisiert werden.
-        
         else:
-            for e in p.event.get():#übernommen
+            if v.vsMensch:
 
-                pygame_widgets.update(e)
-                p.display.update()#übernommen 
-                if e.type == p.QUIT:#übernommen
-                    läuft = False#übernommen
-                                               
-                elif sps.spielBeendet == False:
-                    if e.type == p.MOUSEBUTTONDOWN:#übernommen
-                        position = p.mouse.get_pos()#übernommen
-                        if position[0] < 512 and position[1] < 512:
-                            spalte = position[0] // V_GRÖßE#übernommen
-                            zeile = position[1] // V_GRÖßE#übernommen
-                            if (ausgewähltesRechteck == (zeile, spalte)):#übernommen
-                                ausgewähltesRechteck = ()#übernommen
-                                spielerKlicks = []#übernommen
-                            elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte] == '--'):
-                                ausgewähltesRechteck = ()#übernommen 
-                                spielerKlicks = []#übernommen
-                            elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte][:1] == 'g' and sps.zugWeiß):
-                                ausgewähltesRechteck = ()#übernommen 
-                                spielerKlicks = []#übernommen 
-                            elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte][:1] == 'w' and not sps.zugWeiß):
-                                ausgewähltesRechteck = ()#übernommen 
-                                spielerKlicks = []#übernommen 
-                            else:
-                                ausgewähltesRechteck = (zeile, spalte)#übernommen
-                                spielerKlicks.append(ausgewähltesRechteck)#übernommen
-                            if len(spielerKlicks) == 2:#übernommen 
-                                aktualisiere = True
+                #Hier findet die Aktualisierung statt.
+                if aktualisiere:
 
-                    elif sps.starteOderBeendeSpiel == 'j':
-                        sps.spielBeendet = False
-                        sps = SchachStandAktualisierung.SpielStand()#übernommen
-                        bildschirm = p.display.set_mode((BREITE, HÖHE))#übernommen
-                        ausgewähltesRechteck = ()#übernommen 
-                        spielerKlicks = [] #übernommen
-                        spalte, zeile = 0,0#übernommen
-                        zeichneSpielstand(bildschirm, sps)#übernommen
-                    
-                    elif sps.starteOderBeendeSpiel == 'n':
-                            läuft = False
-                 
+                    startZeile = spielerKlicks[0][0] 
+                    startSpalte = spielerKlicks[0][1] 
+                    endZeile = spielerKlicks[1][0] 
+                    endSpalte = spielerKlicks[1][1] 
+                    bewegteFigur = sps.spielbrett[startZeile][startSpalte]
+
+                    #Die notwendigen Attribute in der Klasse Spielstand werden aktualisiert
+                    sps.definiereZugAttribute(startZeile, startSpalte, endZeile, endSpalte, bewegteFigur)
+                    #Es wird kontrolliert, ob der Zug möglich ist
+                    if(sps.kontrolliere() == True):
+
+                        #Die Benutzeroberfläche wird aktualisiert, danach werden die wichtigen Informationen zum Spiel in Spielstand aktualisiert 
+                        sps.macheZug()
+                        aktualisiereFelder(bildschirm, sps, v)
+                        aktualisiereTore(sps, tfont, bildschirm, SCHWARZ)
+
+                    else:
+                        #Alle Print-Anweisungen dienen zur Kontrolle während des Spiels. Das Spiel wird am Ende in eine Exe-Datei umgewandelt und die Print-Anweisungen
+                        #werden dann nicht ausgegeben. Ich habe Sie deswegen nicht herausgenommen.
+                        print("Dieser Zug kann nicht ausgeführt werden!")
+                
+                    #Vorbereitung für die nächste Aktualisierung, für die nächsten zwei Klicks.
+                    ausgewähltesRechteck = ()
+                    spielerKlicks = []
+                    aktualisiere = False
+                        
+                    p.display.update() #Nur der notwendige Teil des Displays soll aktualisiert werden.
                 else:
-                    if sps.spielBeendet == True:
-                        aktualisiere = False
-                        bildschirm.fill(p.Color("white"), (520, 0, 500, 800))
+                    #Hier werden die Tastatureingaben und die Mausklicks aufgefangen und behandelt.
+                    for e in p.event.get():
+                        pygame_widgets.update(e) #Die Buttons werden aktualisiert
+                        p.display.update()
+                        #Falls im Fenster auf x geklickt wird, wird das Spiel beendet 
+                        if e.type == p.QUIT:
+                            läuft = False
 
-                        if sps.ToreWeiß > sps.ToreSchwarz:
+                        elif sps.spielBeendet == False:
 
-                            textSpielergebnis = tfont.render("Sie haben das", 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis, (520, 10)) 
-                            
-                            textSpielergebnis2 = tfont.render("Spiel mit " +str(sps.ToreWeiß) + ":" + str(sps.ToreSchwarz), 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis2, (520, 50)) 
+                            #Zu Beginn des Spiels muss festgelegt werden, ob Weiß oder Schwarz mit dem ersten Zug beginnt
+                            if sps.startWeißOderSchwarz and not (p.mouse.get_pos()[0] > 656 and p.mouse.get_pos()[0] > 230):
 
-                            textSpielergebnis3 = tfont.render("gewonnwn", 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis3, (520, 90)) 
-                           
-                        elif sps.ToreSchwarz > sps.ToreWeiß:
+                                if e.type == p.KEYDOWN:
+                                    if e.key == p.K_s:
+                                        sps.zugWeiß = False
+                                        sps.startWeißOderSchwarz = False
+                                    elif e.key == p.K_w:
+                                        sps.zugWeiß = True
+                                        sps.startWeißOderSchwarz = False
 
-                            textSpielergebnis = tfont.render("Die KI hat das", 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis, (520, 10)) 
-                            
-                            textSpielergebnis2 = tfont.render("Spiel mit " +str(sps.ToreSchwarz) + ":" + str(sps.ToreWeiß), 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis2, (520, 50)) 
+                            #Die Mausklicks werden aufgefangen               
+                            elif e.type == p.MOUSEBUTTONDOWN and not sps.neueFigurFürBauern:
+                                position = p.mouse.get_pos()
+                                aktualisiere = fangeMausklicksAuf(sps, ausgewähltesRechteck, spielerKlicks, position)
 
-                            textSpielergebnis3 = tfont.render("gewonnwn", 20, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis3, (520, 90)) 
-                    
+                            #Sobald ein Spieler den Bauern mit einer anderen Figur austauschen darf, wird keine andere Handlung aufgefangen, außer das Beenden des Spiels
+                            elif sps.neueFigurFürBauern:
+
+                                if e.type == p.KEYDOWN:
+                                    wähleNeueFigurAus(sps, e, bildschirm, v)
+
+                            #Falls die Taste zum Neustart angeklickt wird, wird das Spiel neugestartet
+                            elif sps.starteOderBeendeSpiel == 'j':
+                        
+                                v = Variablen()
+                                sps = SchachStandAktualisierung.SpielStand()
+                                starteNeu(sps, v)
+
+                            #Falls die Taste zum Beenden des Spiels geklickt wird, wird das Spiel beendet
+                            elif sps.starteOderBeendeSpiel == 'n':
+                                    läuft = False
+                        
                         else:
-                            textSpielergebnis = tfont.render("Das Spiel ist", 30, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis, (520, 10)) 
-                            
-                            textSpielergebnis2 = tfont.render("unentschieden!", 30, SCHWARZ)
-                            bildschirm.blit(textSpielergebnis2, (520, 50)) 
+                            #Falls das Spiel beendet ist, wird geguckt, wer gewonnen hat.
+                            if sps.spielBeendet == True:
+                        
+                                aktualisiere = False
+                                bildschirm.fill(p.Color("white"), (520, 0, 500, 800))
+                                aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ)
 
-                        if sps.starteOderBeendeSpiel == 'j':
-        
-                            sps.spielBeendet = False
-                            sps = SchachStandAktualisierung.SpielStand()#übernommen
-                            bildschirm = p.display.set_mode((BREITE, HÖHE))#übernommen
-                            ausgewähltesRechteck = ()#übernommen 
-                            spielerKlicks = []#übernommen 
-                            spalte, zeile = 0,0#übernommen
-                            zeichneSpielstand(bildschirm, sps)#übernommen
+                #Das Spiel kann immer neugestartet und beendet werden. Beim Beenden wird das Fenster komplett geschlossen. 
+                if sps.starteOderBeendeSpiel == 'j':
+                    
+                    v = Variablen()
+                    sps = SchachStandAktualisierung.SpielStand()
+                    starteNeu(sps, v)
+
+                elif sps.starteOderBeendeSpiel == 'n':
+                    läuft = False
+
+            elif v.vsKI:
+
+                if v.starteSpiel2 == False:
+                    
+                    for e in p.event.get():
+                        pygame_widgets.update(e) #Die Buttons werden aktualisiert
+                        p.display.update()
+                        #Falls im Fenster auf x geklickt wird, wird das Spiel beendet 
+                        if e.type == p.QUIT:
+                            läuft = False
+                        #Das Spiel kann immer neugestartet und beendet werden. Beim Beenden wird das Fenster komplett geschlossen. 
+                        elif sps.starteOderBeendeSpiel == 'j':
+                            
+                            v = Variablen()
+                            sps = SchachStandAktualisierung.SpielStand()
+                            starteNeu(sps, v)
 
                         elif sps.starteOderBeendeSpiel == 'n':
                             läuft = False
+                        elif e.type == p.KEYDOWN:
+                            if e.key == p.K_w:
+                            
+                                sps.zugWeiß = True
+                                v.starteSpiel2 = True
+                            elif e.key == p.K_s:
+                                
+                                sps.zugWeiß = False
+                                v.starteSpiel2 = True
+                else:
+                    
+                    if sps.spielBeendet == False:
+                        
+                        if sps.zugWeiß:
+                            
+                            if aktualisiere:
+                                
+                                startZeile = spielerKlicks[0][0] 
+                                startSpalte = spielerKlicks[0][1] 
+                                endZeile = spielerKlicks[1][0] 
+                                endSpalte = spielerKlicks[1][1] 
+                                bewegteFigur = sps.spielbrett[startZeile][startSpalte]
 
+                                #Die notwendigen Attribute in der Klasse Spielstand werden aktualisiert
+                                sps.definiereZugAttribute(startZeile, startSpalte, endZeile, endSpalte, bewegteFigur)
+
+                                #Es wird kontrolliert, ob der Zug möglich ist
+                                if(sps.kontrolliere() == True):
+
+                                    #Die Benutzeroberfläche wird aktualisiert, danach werden die wichtigen Informationen zum Spiel in Spielstand aktualisiert 
+                                    sps.macheZug()
+                                    aktualisiereFelder(bildschirm, sps, v)
+                                    aktualisiereTore(sps, tfont, bildschirm, SCHWARZ)
+
+                                else:
+                                    #Alle Print-Anweisungen dienen zur Kontrolle während des Spiels. Das Spiel wird am Ende in eine Exe-Datei umgewandelt und die Print-Anweisungen
+                                    #werden dann nicht ausgegeben. Ich habe Sie deswegen nicht herausgenommen.
+                                    print("Dieser Zug kann nicht ausgeführt werden!")
+                            
+                                #Vorbereitung für die nächste Aktualisierung, für die nächsten zwei Klicks.
+                                ausgewähltesRechteck = ()
+                                spielerKlicks = []
+                                aktualisiere = False
+                                p.display.update() #Nur der notwendige Teil des Displays soll aktualisiert werden.
+
+                            else:
+
+                                #Hier werden die Tastatureingaben und die Mausklicks aufgefangen und behandelt.
+                                for e in p.event.get():
+                    
+                                    pygame_widgets.update(e) #Die Buttons werden aktualisiert
+                                    p.display.update()
+                                    #Falls im Fenster auf x geklickt wird, wird das Spiel beendet 
+                                    if e.type == p.QUIT:
+                                        läuft = False
+
+                                    #Die Mausklicks werden aufgefangen               
+                                    elif e.type == p.MOUSEBUTTONDOWN and not sps.neueFigurFürBauern:
+                                        position = p.mouse.get_pos()
+                                        aktualisiere = fangeMausklicksAuf(sps, ausgewähltesRechteck, spielerKlicks, position)
+
+                                    #Sobald ein Spieler den Bauern mit einer anderen Figur austauschen darf, wird keine andere Handlung aufgefangen, außer das Beenden des Spiels
+                                    elif sps.neueFigurFürBauern:
+
+                                        if e.type == p.KEYDOWN:
+                                            wähleNeueFigurAus(sps, e, bildschirm, v)
+
+                                    #Falls die Taste zum Neustart angeklickt wird, wird das Spiel neugestartet
+                                    elif sps.starteOderBeendeSpiel == 'j':
+                                        
+                                        v = Variablen()
+                                        sps = SchachStandAktualisierung.SpielStand()
+                                        starteNeu(sps, v)
+
+                                    #Falls die Taste zum Beenden des Spiels geklickt wird, wird das Spiel beendet
+                                    elif sps.starteOderBeendeSpiel == 'n':
+                                        läuft = False
+
+                        else:
+                            #######################################################################################
+                            #Nach dem der menschliche Spieler seinen Zug gemacht hat, macht die künstliche Intelligenz einen Zug.
+                            baum = Baum(sps)
+                            baum.erstelleBaum()
+                            besterZug = baum.besterZug()
+
+                            if besterZug is not None:
+                                
+                                sps.möglicheFolgeStellungFürKI = False
+
+                                startZeile = besterZug[0]
+                                startSpalte = besterZug[1]
+                                endZeile = besterZug[2]
+                                endSpalte = besterZug[3]
+                                bewegteFigur = besterZug[4]
+
+                                #Die notwendigen Attribute in der Klasse Spielstand werden aktualisiert
+                                sps.definiereZugAttribute(startZeile, startSpalte, endZeile, endSpalte, bewegteFigur)
+                                sps.kontrolliere()
+                                sps.macheZug()
+                                
+                                if startZeile == endZeile and startSpalte == endSpalte:
+                                    (x,y) = besterZug[5]
+                                    sps.spielbrett[x][y] = '--'
+                                    sps.neueFigur = bewegteFigur
+                                    sps.aktualisiereFeldFürNeueFigurFürBauern = True
+                                aktualisiereFelder(bildschirm, sps, v)
+                                aktualisiereTore(sps, tfont, bildschirm, SCHWARZ)  
+
+                                if sps.spielBeendet == True:
+
+                                    aktualisiere = False
+                                    bildschirm.fill(p.Color("white"), (520, 0, 500, 800))
+                                    aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ)
+                                    p.display.update() #Nur der notwendige Teil des Displays soll aktualisiert werden.
+                            else:
+
+                                sps.spielBeendet = True
+                    else:
+
+                        for e in p.event.get():
+                            pygame_widgets.update(e) #Die Buttons werden aktualisiert
+                            p.display.update()
+                            #Falls im Fenster auf x geklickt wird, wird das Spiel beendet 
+                            if e.type == p.QUIT:
+                                läuft = False
+        
+                            #Das Spiel kann immer neugestartet und beendet werden. Beim Beenden wird das Fenster komplett geschlossen. 
+                            if sps.starteOderBeendeSpiel == 'j':
+                            
+                                v = Variablen()
+                                sps = SchachStandAktualisierung.SpielStand()
+                                starteNeu(sps, v)
+
+                            elif sps.starteOderBeendeSpiel == 'n':
+                                läuft = False
+
+                    if sps.spielBeendet == True:
+                    
+                        aktualisiere = False
+                        bildschirm.fill(p.Color("white"), (520, 0, 500, 800))
+                        aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ)
+
+def kennZeichneFelder(bildschirm, startZeile, startSpalte, endZeile, endSpalte):
+     
+    p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+    p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))  
+
+def aktualisiereTore(sps, tfont, bildschirm, schwarz):
+    #Die Tore werden bei jeder Aktualisierung des Spiels aktualisiert
+    textKITore = tfont.render(str(sps.ToreSchwarz), 30, schwarz)
+    bildschirm.fill(p.Color("white"), (645, 73, 50, 30))
+    text_rect = textKITore.get_rect()
+    text_rect.center = (646, 73)
+    bildschirm.blit(textKITore, (646, 73)) 
+
+    textSPTore = tfont.render(str(sps.ToreWeiß), 30, schwarz)
+    bildschirm.fill(p.Color("white"), (645, 408, 50, 30))
+    text_rect = textSPTore.get_rect()
+    text_rect.center = (646, 408)
+    bildschirm.blit(textSPTore, (646, 408))
+
+    p.display.update()
+
+def starteNeu(sps, v):
+    zeichneSpielstand(v.bildschirm, sps)     
+    p.display.update() #Nur der notwendige Teil des Displays soll aktualisiert werden.                           
+
+def wähleNeueFigurAus(sps, e, bildschirm, v):
+    if e.key == p.K_d:
+        
+        if sps.zugWeiß:
+            sps.neueFigur = "wD"
+        else:
+            sps.neueFigur = "sD"
+
+    elif e.key == p.K_t:
+        
+        if sps.zugWeiß:
+            sps.neueFigur = "wT"
+        else:
+            sps.neueFigur = "sT"
+        
+    elif e.key == p.K_p:
+        
+        if sps.zugWeiß:
+            sps.neueFigur = "wP"
+        else:
+            sps.neueFigur = "sP"
+        
+    elif e.key == p.K_l:
+        
+        if sps.zugWeiß:
+            sps.neueFigur = "wL"
+        else:
+            sps.neueFigur = "sL"
+        
+    else:
+        
+        if sps.zugWeiß:
+            sps.neueFigur = "wD"
+        else:
+            sps.neueFigur = "sD"
+        
+    #Der Zug wird ausgeführt, das Spielfeld wird aktualisiert und der andere Spieler ist dran
+    sps.macheZug()
+    aktualisiereFelder(bildschirm, sps, v)
+
+def fangeMausklicksAuf(sps, ausgewähltesRechteck, spielerKlicks, position):
+    
+    if position[0] < 512 and position[1] < 512:
+        spalte = position[0] // V_GRÖßE
+        zeile = position[1] // V_GRÖßE
+        if (ausgewähltesRechteck == (zeile, spalte)):
+            ausgewähltesRechteck = ()
+            spielerKlicks = []
+        elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte] == '--'):
+            ausgewähltesRechteck = () 
+            spielerKlicks = []
+        elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte][:1] == 's' and sps.zugWeiß):
+            ausgewähltesRechteck = ()
+            spielerKlicks = []
+        elif (len(spielerKlicks) == 0 and sps.spielbrett[zeile][spalte][:1] == 'w' and not sps.zugWeiß):
+            ausgewähltesRechteck = () 
+            spielerKlicks = []
+        else:
+            ausgewähltesRechteck = (zeile, spalte)
+            spielerKlicks.append(ausgewähltesRechteck)
+
+    #Sobald zwei Felder angeklickt wurden, wird das Spiel aktualisiert    
+    if len(spielerKlicks) == 2:
+        return True
+    else:
+        return False
+
+def aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ):
+    if sps.ToreWeiß > sps.ToreSchwarz:
+    
+        textSpielergebnis = tfont.render("Sie haben das", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis, (535, 10)) 
+        
+        textSpielergebnis2 = tfont.render("Spiel mit", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis2, (570, 50)) 
+
+        textSpielergebnis3 = tfont.render(str(sps.ToreWeiß) + ":" + str(sps.ToreSchwarz), 20, SCHWARZ)
+        text_rect = textSpielergebnis3.get_rect()
+        text_rect.center = (645, 110)
+        bildschirm.blit(textSpielergebnis3, text_rect)
+
+        textSpielergebnis3 = tfont.render("gewonnen", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis3, (575, 130)) 
+        
+    elif sps.ToreSchwarz > sps.ToreWeiß:
+
+        textSpielergebnis = tfont.render("Die KI hat das", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis, (530, 10)) 
+        
+        textSpielergebnis2 = tfont.render("Spiel mit", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis2, (570, 50)) 
+
+        textSpielergebnis3 = tfont.render(str(sps.ToreSchwarz) + ":" + str(sps.ToreWeiß), 20, SCHWARZ)
+        text_rect = textSpielergebnis3.get_rect()
+        text_rect.center = (645, 110)
+        bildschirm.blit(textSpielergebnis3, text_rect)
+
+        textSpielergebnis3 = tfont.render("gewonnen", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis3, (575, 130)) 
+
+    else:
+        textSpielergebnis = tfont.render("Das Spiel ist", 10, SCHWARZ)
+        bildschirm.blit(textSpielergebnis, (530, 10)) 
+
+        textSpielergebnis2 = tfont.render("mit " + str(sps.ToreWeiß) + ":" + str(sps.ToreSchwarz), 20, SCHWARZ)
+        text_rect = textSpielergebnis2.get_rect()
+        text_rect.center = (645, 75)
+        bildschirm.blit(textSpielergebnis2, text_rect)
+        
+        textSpielergebnis3 = tfont.render("unentschieden!", 30, SCHWARZ)
+        bildschirm.blit(textSpielergebnis3, (530, 100)) 
+
+#Diese Funktion wird beim Klicken der beiden Tasten aufgerufen
 def starteSpielErneutOderBeende(c, sps):   
     if c == 'j':            
-        sps.starteOderBeendeSpiel = c 
+        sps.starteOderBeendeSpiel = c
     else:
-        sps.starteOderBeendeSpiel = c 
+        sps.starteOderBeendeSpiel = c
 
-
-def zeichneSpielstand(bildschirm, sps): #übernommen 
-    zeichneBrett(bildschirm)#übernommen
-    zeichneFiguren(bildschirm, sps.spielbrett)#übernommen 
+#Hier wird die Benutzeroberfläche gezeichnet
+def zeichneSpielstand(bildschirm, sps): 
+    zeichneBrett(bildschirm)
+    zeichneFiguren(bildschirm, sps.spielbrett) 
 
     #Der Text für die Tore der KI werden angezeigt
-    tfont = p.font.SysFont("monospace", 30) #Ab dieser Stelle, wurde nichts in dieser Methode übernommen
+    tfont = p.font.SysFont("monospace", 30) 
     SCHWARZ = (0, 0, 0)
     textKIS = tfont.render("Die KI hat", 100, SCHWARZ)
-    bildschirm.blit(textKIS, (565, 20))
+    bildschirm.blit(textKIS, (565, 35))
 
     textKIS2 = tfont.render("Tore", 30, SCHWARZ)
-    bildschirm.blit(textKIS2, (620, 100))
+    bildschirm.blit(textKIS2, (620, 108))
 
     textSPS = tfont.render("Sie haben", 100, SCHWARZ)
     bildschirm.blit(textSPS, (575, 370))
 
     textSPS2 = tfont.render("Tore", 30, SCHWARZ)
-    bildschirm.blit(textSPS2, (620, 450))
+    bildschirm.blit(textSPS2, (620, 443))
 
     textKITore = tfont.render(str(sps.ToreSchwarz), 30, SCHWARZ)
-    bildschirm.blit(textKITore, (647, 60)) 
+    text_rect = textKITore.get_rect()
+    text_rect.center = (655, 90)
+    bildschirm.blit(textKITore, text_rect)
 
     textSPTore = tfont.render(str(sps.ToreWeiß), 30, SCHWARZ)
-    bildschirm.blit(textSPTore, (647, 410)) 
+    text_rect = textSPTore.get_rect()
+    text_rect.center = (655, 425)
+    bildschirm.blit(textSPTore, text_rect)
 
-def zeichneBrett(bildschirm):#übernommen
-    spalteors = [p.Color("white"), p.Color("lightcoral")]#übernommen
-    for r in range(DIMENSION):#übernommen
-        for c in range(DIMENSION):#übernommen
-            spalteor = spalteors[((r+c) % 2)]#übernommen
-            p.draw.rect(bildschirm, spalteor, p.Rect(c*V_GRÖßE, r*V_GRÖßE, V_GRÖßE, V_GRÖßE))#übernommen
+#Hier wird das Brett zu Beginn des Spiels gezeichnet
+def zeichneBrett(bildschirm):
+    spalteors = [p.Color("white"), p.Color("saddlebrown")]
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            spalteor = spalteors[((r+c) % 2)]
+            p.draw.rect(bildschirm, spalteor, p.Rect(c*V_GRÖßE, r*V_GRÖßE, V_GRÖßE, V_GRÖßE))
 
-    p.draw.rect(bildschirm, p.Color("white"), p.Rect(512, 0, 288, 512))#selbst gemacht
+    p.draw.rect(bildschirm, p.Color("white"), p.Rect(512, 0, 288, 512))
 
+#Hier werden die Figuren zu Beginn des Spiels gezeichnet
+def zeichneFiguren(bildschirm, spielbrett):
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            figur = spielbrett[r][c] 
+            if figur != "--":
+                bildschirm.blit(BILDER[figur], p.Rect(c*V_GRÖßE, r*V_GRÖßE, V_GRÖßE, V_GRÖßE))
 
-def zeichneFiguren(bildschirm, spielbrett):#übernommen
-    for r in range(DIMENSION):#übernommen
-        for c in range(DIMENSION):#übernommen
-            figur = spielbrett[r][c]#übernommen 
-            if figur != "--":#übernommen 
-                bildschirm.blit(BILDER[figur], p.Rect(c*V_GRÖßE, r*V_GRÖßE, V_GRÖßE, V_GRÖßE))#übernommen
-
-def aktualisiereFelder(bildschirm, sps):
+#Hier werden die Felder aktualisiert, die notwendig sind
+def aktualisiereFelder(bildschirm, sps, v):
 
     spielbrett = sps.spielbrett
     startZeile = sps.startZeile
@@ -269,119 +565,242 @@ def aktualisiereFelder(bildschirm, sps):
     endZeile = sps.endZeile
     endSpalte = sps.endSpalte
 
-    spalteors = [p.Color("white"), p.Color("lightcoral")]#übernommen
-    spalteorE = spalteors[((endZeile+endSpalte) % 2)]#übernommen 
-    spalteorS = spalteors[((startZeile+startSpalte) % 2)]#übernommen 
+    spalteors = [p.Color("white"), p.Color("saddlebrown")]
+    spalteorE = spalteors[((endZeile+endSpalte) % 2)]
+    spalteorS = spalteors[((startZeile+startSpalte) % 2)] 
 
-    if sps.Tor:
-        p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))  
-        p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+    if sps.löscheMarkierungen and v.vsKI:
+        z = 0
+        for m in sps.zlm:
+        
+            p.draw.rect(bildschirm, spalteors[((m[0]+m[1]) % 2)], p.Rect(m[1]*V_GRÖßE, m[0]*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            p.draw.rect(bildschirm, spalteors[((m[2]+m[3]) % 2)], p.Rect(m[3]*V_GRÖßE, m[2]*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            
+            if len(sps.zzf) != 0:
+                bildschirm.blit(BILDER[sps.zzf[z]], p.Rect(m[3]*V_GRÖßE, m[2]*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                z += 1
+                
+        sps.zzf = []
+        sps.löscheMarkierungen = False
+        sps.zlm = []
+        z = 0
+
+    if sps.tor:
+
+        if sps.zugWeiß and v.vsKI:
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+
+            sps.zlm.append((startZeile, startSpalte, endZeile, endSpalte))
+            sps.löscheMarkierungen = True
+            sps.zzf = []
+            sps.tor = False
+
+        else:
+  
+            p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            sps.tor = False
 
     elif sps.enPassantFürBauerWeiß:
-        sps.enPassantFelderFürBauerWeiß.remove([(startZeile, startSpalte),(endZeile, endSpalte)])  
-        
-        if not spielbrett[endZeile][endSpalte] == '--':  
-            p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
-        figur = spielbrett[startZeile][startSpalte]#übernommen
+        sps.enPassantFürBauerWeiß = False
+        figur = sps.bewegteFigur
         if figur != "--": 
             bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
 
         p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))  
 
         if spalteorS == p.Color("white"):
-            enPassantFarbe = p.Color("lightcoral")
+            enPassantFarbe = p.Color("saddlebrown")
         else:
             enPassantFarbe = p.Color("white")
 
         p.draw.rect(bildschirm, enPassantFarbe, p.Rect(endSpalte*V_GRÖßE, (endZeile+1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
     elif sps.enPassantFürBauerSchwarz:
-        sps.enPassantFelderFürBauerSchwarz.remove([(startZeile, startSpalte),(endZeile, endSpalte)])  
-
-        if not spielbrett[endZeile][endSpalte] == '--': 
-            p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-
-        figur = spielbrett[startZeile][startSpalte]#übernommen
-        if figur != "--": 
-            bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
- 
-        p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-        spalteor = spalteors[((endZeile-1+endSpalte) % 2)] 
-        p.draw.rect(bildschirm, spalteor, p.Rect(endSpalte*V_GRÖßE, (endZeile-1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-
-    elif sps.neueFigurFürBauern:        
-        if spielbrett[endZeile][endSpalte][:1] == spielbrett[startZeile][startSpalte][:1]: 
-            p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-            figur = spielbrett[endZeile][endSpalte]#übernommen
+        
+        if v.vsKI:
+            sps.enPassantFürBauerSchwarz = False
+            figur = sps.bewegteFigur
             if figur != "--": 
-                bildschirm.blit(BILDER[figur], p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-        else:
-            print("Es darf keine gegnerische Figur ausgewählt werden.")
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+    
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, (endZeile)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            spalteor = spalteors[((endZeile-1+endSpalte) % 2)] 
+            p.draw.rect(bildschirm, spalteor, p.Rect(endSpalte*V_GRÖßE, (endZeile-1)*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            if figur != "--": 
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            
+            sps.zlm.append((startZeile, startSpalte, endZeile, endSpalte))
+            sps.zzf.append(figur)
+            sps.löscheMarkierungen = True
 
+        else:
+            sps.enPassantFürBauerSchwarz = False
+            figur = sps.bewegteFigur
+            if figur != "--": 
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+    
+            p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            spalteor = spalteors[((endZeile-1+endSpalte) % 2)] 
+            p.draw.rect(bildschirm, spalteor, p.Rect(endSpalte*V_GRÖßE, (endZeile-1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+
+    elif sps.aktualisiereFeldFürNeueFigurFürBauern:        
+        
+        if sps.zugWeiß == True and v.vsKI:
+        
+            figur = sps.neueFigur
+            if not figur == '':
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, (startZeile-1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                sps.aktualisiereFeldFürNeueFigurFürBauern = False
+
+                sps.zlm.append((startZeile-1, startSpalte, endZeile, endSpalte))
+                sps.löscheMarkierungen = True
+                sps.zzf.append(figur)
+                
+        else: 
+        
+            figur = sps.neueFigur
+            if not figur == '':
+                p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                sps.aktualisiereFeldFürNeueFigurFürBauern = False
+       
     elif sps.rochadeKleinWeiß:
+            
             spalteor = spalteors[((7+7) % 2)] 
             p.draw.rect(bildschirm, spalteor, p.Rect(7*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
             spalteor = spalteors[((7+4) % 2)] 
             p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
-            figur1 = spielbrett[7][7]#übernommen
-            figur2 = spielbrett[7][4]#übernommen
+            figur1 = spielbrett[7][6]
+            figur2 = spielbrett[7][5]
 
-            bildschirm.blit(BILDER[figur1], p.Rect((5)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-            bildschirm.blit(BILDER[figur2], p.Rect((6)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            bildschirm.blit(BILDER[figur1], p.Rect((6)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            bildschirm.blit(BILDER[figur2], p.Rect((5)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+            sps.rochadeKleinWeiß = False
 
     elif sps.rochadeGroßWeiß:
-            spalteor = spalteors[((7+0) % 2)] 
-            p.draw.rect(bildschirm, spalteor, p.Rect(0*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            
+        spalteor = spalteors[((7+0) % 2)] 
+        p.draw.rect(bildschirm, spalteor, p.Rect(0*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
-            spalteor = spalteors[((7+4) % 2)] 
-            p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+        spalteor = spalteors[((7+4) % 2)] 
+        p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
-            figur1 = spielbrett[7][0]#übernommen
-            figur2 = spielbrett[7][4]#übernommen
+        figur1 = spielbrett[7][2]
+        figur2 = spielbrett[7][3]
 
-            bildschirm.blit(BILDER[figur1], p.Rect((3)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-            bildschirm.blit(BILDER[figur2], p.Rect((2)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+        bildschirm.blit(BILDER[figur1], p.Rect((3)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+        bildschirm.blit(BILDER[figur2], p.Rect((2)*V_GRÖßE, 7*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+        sps.rochadeGroßWeiß = False
 
     elif sps.rochadeKleinSchwarz:
+
+        if sps.zugWeiß and v.vsKI:   
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(7*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(5*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(4*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(6*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+            figur1 = spielbrett[0][6]
+            figur2 = spielbrett[0][5]
+
+            bildschirm.blit(BILDER[figur1], p.Rect((6)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            bildschirm.blit(BILDER[figur2], p.Rect((5)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+            sps.rochadeKleinSchwarz = False
+            sps.zlm.extend([(0, 4, 0, 6), (0, 7, 0, 5)])
+            sps.zzf = ['sK', 'sT']
+            sps.löscheMarkierungen = True
+
+        else:
+
             spalteor = spalteors[((0+7) % 2)] 
             p.draw.rect(bildschirm, spalteor, p.Rect(7*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
             spalteor = spalteors[((4) % 2)] 
             p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
-            figur1 = spielbrett[0][7]#übernommen
-            figur2 = spielbrett[0][4]#übernommen
+            figur1 = spielbrett[0][6]
+            figur2 = spielbrett[0][5]
 
-            bildschirm.blit(BILDER[figur1], p.Rect((5)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-            bildschirm.blit(BILDER[figur2], p.Rect((6)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            bildschirm.blit(BILDER[figur1], p.Rect((6)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            bildschirm.blit(BILDER[figur2], p.Rect((5)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+            sps.rochadeKleinSchwarz = False
 
     elif sps.rochadeGroßSchwarz: 
-            spalteor = spalteors[((0+0) % 2)] 
-            p.draw.rect(bildschirm, spalteor, p.Rect(0*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            if sps.zugWeiß and v.vsKI:
+                
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(0*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(2*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(4*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(3*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
 
-            spalteor = spalteors[((0+4) % 2)] 
-            p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                figur1 = spielbrett[0][2]
+                figur2 = spielbrett[0][3]
 
-            figur1 = spielbrett[0][0]#übernommen
-            figur2 = spielbrett[0][4]#übernommen
+                bildschirm.blit(BILDER[figur1], p.Rect((2)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                bildschirm.blit(BILDER[figur2], p.Rect((3)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
 
-            bildschirm.blit(BILDER[figur1], p.Rect((3)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-            bildschirm.blit(BILDER[figur2], p.Rect((2)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                sps.rochadeGroßSchwarz = False
+                sps.zlm.extend([(0, 0, 0, 2), (0, 4, 0, 3)])
+                sps.zzf = ['sK', 'sT']
+                sps.löscheMarkierungen = True
+            
+            else:
+                spalteor = spalteors[((0+0) % 2)] 
+                p.draw.rect(bildschirm, spalteor, p.Rect(0*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
+                spalteor = spalteors[((0+4) % 2)] 
+                p.draw.rect(bildschirm, spalteor, p.Rect(4*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+
+                figur1 = spielbrett[0][2]
+                figur2 = spielbrett[0][3]
+
+                bildschirm.blit(BILDER[figur2], p.Rect((3)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+                bildschirm.blit(BILDER[figur1], p.Rect((2)*V_GRÖßE, 0*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+
+                sps.rochadeGroßSchwarz = False
+
+    #Die Figur wird von einem Feld in ein anderes leeres Feld bewegt
     else:
+        #Das zweite Feld wird mit einem neuen Viereck übermalt.
+        if sps.zugWeiß and not sps.bewegteFigur == 'wB' and v.vsKI:
+            
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            #In dieses Feld wird die neue Figur eingesetzt.
+            figur = sps.bewegteFigur
+            if figur != "--": 
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            #Das erste Feld wird mit einem neuen Viereck übermalt.
+            p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            sps.zlm.append((startZeile, startSpalte, endZeile, endSpalte))
+            sps.zzf.append(figur)
+            sps.löscheMarkierungen = True
+        else:
+            
+            p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+            #In dieses Feld wird die neue Figur eingesetzt.
+            figur = sps.bewegteFigur
+            if figur != "--": 
+                bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
+            #Das erste Feld wird mit einem neuen Viereck übermalt.
+            p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+        
 
-        #Immer im wechsel 0 und 1 als Ergebnis
-        p.draw.rect(bildschirm, spalteorE, p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-
-        figur = spielbrett[startZeile][startSpalte]#übernommen
-        if figur != "--": 
-            bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
-
-        #Immer im wechsel 0 und 1 als Ergebnis
-        p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
 if __name__ == "__main__":
     main()
