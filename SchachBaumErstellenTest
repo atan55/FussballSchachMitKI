@@ -1,0 +1,24 @@
+from SchachStandAktualisierung import SpielStand as Sp
+from SchachKI import Baum 
+import numpy as np
+from time import perf_counter
+
+def main():
+    start_time = perf_counter()
+    spielstand = Sp()
+    spielstand.zugWeiß = False
+    spielstand.möglicheFolgeStellungFürKI = True
+    baum = Baum(spielstand)
+    baum.erstelleBaum()
+    baum.gebeBaumAus()
+    besterZug = baum.besterZug()
+    print("Der beste Zug: ", besterZug)
+
+    end_time = perf_counter()
+
+    execution_time = end_time - start_time
+
+    print(f"Die Ausführungszeit beträgt: {execution_time} Sekunden")
+
+if __name__ == "__main__":
+    main()
