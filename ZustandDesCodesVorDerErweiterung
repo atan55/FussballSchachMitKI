@@ -1,5 +1,7 @@
 #Hier sehen Sie den Code, den ich übernommen habe und danach stark erweitert und abgeändert habe. Somit haben Sie einen besseren Eindruck davon, in wie weit ich den 
 #Code erweitert und abgeändert habe.
+#Erster Link von dem dieser Code übernommen wurde: https://www.youtube.com/watch?v=EnYui0e73Rs&list=PLBwF487qi8MGU81nDGaeNE1EnNEPYWKY_ 
+#Zweiter Link, von dem dieser Code übernommen wurde: https://www.youtube.com/watch?v=o24J3WcBGLg&list=PLBwF487qi8MGU81nDGaeNE1EnNEPYWKY_&index=2 
 
 import pygame as p
 from Chess import ChessEngine
