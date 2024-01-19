@@ -40,8 +40,6 @@ def main():
     SCHWARZ = (0, 0, 0)
 
     #Tasten zum Neustarten und beenden des Spiels
-    #Der Code für beide tasten wurde aus dem Internet übernommen.
-    #Der Link: https://pygamewidgets.readthedocs.io/en/latest/widgets/button/ 
     taste = Button(
         # Mandatory Parameters
         bildschirm,  # Surface to place taste on
@@ -325,6 +323,8 @@ def main():
                                 if startZeile == endZeile and startSpalte == endSpalte:
                                     (x,y) = besterZug[5]
                                     sps.spielbrett[x][y] = '--'
+                                    sps.startZeile = x
+                                    sps.startSpalte = y
                                     sps.neueFigur = bewegteFigur
                                     sps.aktualisiereFeldFürNeueFigurFürBauern = True
                                 aktualisiereFelder(bildschirm, sps, v)
@@ -459,11 +459,11 @@ def fangeMausklicksAuf(sps, ausgewähltesRechteck, spielerKlicks, position):
 def aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ):
     if sps.ToreWeiß > sps.ToreSchwarz:
     
-        textSpielergebnis = tfont.render("Sie haben das", 20, SCHWARZ)
-        bildschirm.blit(textSpielergebnis, (535, 10)) 
+        textSpielergebnis = tfont.render("Weiß hat das", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis, (545, 10)) 
         
         textSpielergebnis2 = tfont.render("Spiel mit", 20, SCHWARZ)
-        bildschirm.blit(textSpielergebnis2, (570, 50)) 
+        bildschirm.blit(textSpielergebnis2, (573, 50)) 
 
         textSpielergebnis3 = tfont.render(str(sps.ToreWeiß) + ":" + str(sps.ToreSchwarz), 20, SCHWARZ)
         text_rect = textSpielergebnis3.get_rect()
@@ -475,8 +475,8 @@ def aktualisiereTextNachSpielEnde(sps, tfont, bildschirm, SCHWARZ):
         
     elif sps.ToreSchwarz > sps.ToreWeiß:
 
-        textSpielergebnis = tfont.render("Die KI hat das", 20, SCHWARZ)
-        bildschirm.blit(textSpielergebnis, (530, 10)) 
+        textSpielergebnis = tfont.render("Schwarz hat das", 20, SCHWARZ)
+        bildschirm.blit(textSpielergebnis, (522, 10)) 
         
         textSpielergebnis2 = tfont.render("Spiel mit", 20, SCHWARZ)
         bildschirm.blit(textSpielergebnis2, (570, 50)) 
@@ -516,14 +516,14 @@ def zeichneSpielstand(bildschirm, sps):
     #Der Text für die Tore der KI werden angezeigt
     tfont = p.font.SysFont("monospace", 30) 
     SCHWARZ = (0, 0, 0)
-    textKIS = tfont.render("Die KI hat", 100, SCHWARZ)
-    bildschirm.blit(textKIS, (565, 35))
+    textKIS = tfont.render("Schwarz hat", 100, SCHWARZ)
+    bildschirm.blit(textKIS, (555, 35))
 
     textKIS2 = tfont.render("Tore", 30, SCHWARZ)
     bildschirm.blit(textKIS2, (620, 108))
 
-    textSPS = tfont.render("Sie haben", 100, SCHWARZ)
-    bildschirm.blit(textSPS, (575, 370))
+    textSPS = tfont.render("Weiß hat", 100, SCHWARZ)
+    bildschirm.blit(textSPS, (585, 370))
 
     textSPS2 = tfont.render("Tore", 30, SCHWARZ)
     bildschirm.blit(textSPS2, (620, 443))
@@ -619,7 +619,6 @@ def aktualisiereFelder(bildschirm, sps, v):
         p.draw.rect(bildschirm, enPassantFarbe, p.Rect(endSpalte*V_GRÖßE, (endZeile+1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
     elif sps.enPassantFürBauerSchwarz:
-        
         if v.vsKI:
             sps.enPassantFürBauerSchwarz = False
             figur = sps.bewegteFigur
@@ -653,13 +652,13 @@ def aktualisiereFelder(bildschirm, sps, v):
         
             figur = sps.neueFigur
             if not figur == '':
-                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, (startZeile-1)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
+                p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(startSpalte*V_GRÖßE, (startZeile)*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
                 p.draw.rect(bildschirm, p.Color("darkgreen"), p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
 
                 bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
                 sps.aktualisiereFeldFürNeueFigurFürBauern = False
 
-                sps.zlm.append((startZeile-1, startSpalte, endZeile, endSpalte))
+                sps.zlm.append((startZeile, startSpalte, endZeile, endSpalte))
                 sps.löscheMarkierungen = True
                 sps.zzf.append(figur)
                 
@@ -799,8 +798,6 @@ def aktualisiereFelder(bildschirm, sps, v):
                 bildschirm.blit(BILDER[figur], p.Rect(endSpalte*V_GRÖßE, endZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE))
             #Das erste Feld wird mit einem neuen Viereck übermalt.
             p.draw.rect(bildschirm, spalteorS, p.Rect(startSpalte*V_GRÖßE, startZeile*V_GRÖßE, V_GRÖßE, V_GRÖßE)) 
-        
-
 
 if __name__ == "__main__":
     main()
