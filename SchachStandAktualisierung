@@ -1,6 +1,6 @@
 import numpy as np
 import pygame as p #Eine Bibliothek von Python für die Entwicklung von Multimedia-Anwendungen   
-from typing import Any, List
+from typing import List
 import sys
 import copy
 
@@ -17,7 +17,7 @@ class Variablen():
 
 class SpielStand(): 
     def __init__(self):
-        
+        #Durch diese Zeile werden die verschachtelten Arrays im Terminal vollständig angezeigt
         np.set_printoptions(threshold=sys.maxsize)
         #Verschachteltes Array, in dem Array mit Stirngs sind. Diese String repräsentieren die Figur auf dem jeweiligen Feld
         self.spielbrett =   np.array([   
@@ -267,89 +267,64 @@ class SpielStand():
             
             if self.zugWeiß:
                 self.ToreWeiß += 1#Weiß ist drann, es wurde ein Tor gemacht
+                self.anzahlFigurenWeiß -= 1
                 self.tor = True
 
-                if self.anzahlFigurenSchwarz > 1:
-
-                    #if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein vorher: ", self.punkte)
-                    #    pass
-                    #if self.bewegteFigur[1] == 'B':
-                    #    self.punkteDurchFigurenWeiß -= 1000
-                    #elif self.bewegteFigur[1] == 'K':
-                    #    self.punkteDurchFigurenWeiß -= 2000
-                    #elif self.bewegteFigur[1] == 'P':
-                    #    self.punkteDurchFigurenWeiß -= 4000
-                    #elif self.bewegteFigur[1] == 'T':
-                    #    self.punkteDurchFigurenWeiß -= 6000
-                    #elif self.bewegteFigur[1] == 'L':
-                    #    self.punkteDurchFigurenWeiß -= 6000
-                    #elif self.bewegteFigur[1] == 'D':
-                    #    self.punkteDurchFigurenWeiß -= 10000
-                    #if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein nachher: ", self.punkte)
-                    #    pass
-
-                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
-                        self.punkteDurchFigurenSchwarz -= 500
-                        self.punkteDurchFigurenWeiß += 500
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
-                        self.punkteDurchFigurenSchwarz -= 1000
-                        self.punkteDurchFigurenWeiß += 1000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
-                        self.punkteDurchFigurenSchwarz -= 2000
-                        self.punkteDurchFigurenWeiß += 2000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
-                        self.punkteDurchFigurenSchwarz -= 10000
-                        self.punkteDurchFigurenWeiß += 10000
-                    
-                    if self.bewegteFigur[1] == 'B' and self.spielbrett[self.endZeile][self.endSpalte] == '--':
-                        self.punkteDurchFigurenWeiß += 500
-                    elif self.bewegteFigur[1] == 'K':
-                        self.punkteDurchFigurenWeiß -= 1000
-                    elif self.bewegteFigur[1] == 'P':
-                        self.punkteDurchFigurenWeiß -= 2000
-                    elif self.bewegteFigur[1] == 'T':
-                        self.punkteDurchFigurenWeiß -= 3000
-                    elif self.bewegteFigur[1] == 'L':
-                        self.punkteDurchFigurenWeiß -= 3000
-                    elif self.bewegteFigur[1] == 'D':
-                        self.punkteDurchFigurenWeiß -= 10000
-
-                else:
-
-                    #if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein vorher: ", self.punkte)
-                    #    pass
-                    if self.bewegteFigur[1] == 'B':
-                        self.punkteDurchFigurenWeiß += 500
-                    elif self.bewegteFigur[1] == 'K':
-                        self.punkteDurchFigurenWeiß += 1000
-                    elif self.bewegteFigur[1] == 'P':
-                        self.punkteDurchFigurenWeiß += 2000
-                    elif self.bewegteFigur[1] == 'T':
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.bewegteFigur[1] == 'L':
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.bewegteFigur[1] == 'D':
-                        self.punkteDurchFigurenWeiß += 10000
-                    #if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß, " Punkte allgemein nachher: ", self.punkte)
-                    #    pass
-
-                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 's': #Beim Tor wurde eine schwarze Figur geschlagen
+                if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                    self.punkteDurchFigurenSchwarz -= 500
+                    self.punkteDurchFigurenWeiß += 500
                     self.anzahlFigurenSchwarz -= 1
                     self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                    self.punkteDurchFigurenSchwarz -= 1000
+                    self.punkteDurchFigurenWeiß += 1000
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                    self.punkteDurchFigurenSchwarz -= 2000
+                    self.punkteDurchFigurenWeiß += 2000
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                    self.punkteDurchFigurenWeiß += 3000
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                    self.punkteDurchFigurenWeiß += 3000
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                    self.punkteDurchFigurenSchwarz -= 10000
+                    self.punkteDurchFigurenWeiß += 10000
+                    self.anzahlFigurenSchwarz -= 1
+                    self.figurSchlag = True
+                
+                if self.bewegteFigur[1] == 'B':
+                    self.punkteDurchFigurenWeiß += 500
+                elif self.bewegteFigur[1] == 'K':
+                    self.punkteDurchFigurenWeiß -= 1000
+                elif self.bewegteFigur[1] == 'P':
+                    self.punkteDurchFigurenWeiß -= 2000
+                elif self.bewegteFigur[1] == 'T':
+                    self.punkteDurchFigurenWeiß -= 3000
+                elif self.bewegteFigur[1] == 'L':
+                    self.punkteDurchFigurenWeiß -= 3000
+                elif self.bewegteFigur[1] == 'D':
+                    self.punkteDurchFigurenWeiß -= 10000
                     
                 self.spielbrett[self.endZeile][self.endSpalte] = '--' #Hier wird das Spielbrett aktualisiert
                 self.spielbrett[self.startZeile][self.startSpalte] = '--'
-                self.anzahlFigurenWeiß -= 1
+
+                if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                    self.ToreWeiß += self.anzahlFigurenWeiß 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                    self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                    self.spielBeendet = True
             
             else:
                 
@@ -360,85 +335,70 @@ class SpielStand():
             
             if not self.zugWeiß:
                 self.ToreSchwarz += 1
+                self.anzahlFigurenSchwarz -= 1
                 self.tor = True
 
-                if self.anzahlFigurenWeiß > 1:
+                
 
-                    if self.möglicheFolgeStellungFürKI == False:
-                        pass
-                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
-                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
-                        self.punkteDurchFigurenWeiß -= 500
-                        self.punkteDurchFigurenSchwarz += 500
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
-                        self.punkteDurchFigurenWeiß -= 1000
-                        self.punkteDurchFigurenSchwarz += 1000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
-                        self.punkteDurchFigurenWeiß -= 2000
-                        self.punkteDurchFigurenSchwarz += 2000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
-                        self.punkteDurchFigurenWeiß -= 3000
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
-                        self.punkteDurchFigurenWeiß -= 3000
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
-                        self.punkteDurchFigurenWeiß -= 10000
-                        self.punkteDurchFigurenSchwarz += 10000
-                    
-                    if self.bewegteFigur[1] == 'B' and self.spielbrett[self.endZeile][self.endSpalte] == '--':
-                        self.punkteDurchFigurenSchwarz += 500
-                    elif self.bewegteFigur[1] == 'K':
-                        self.punkteDurchFigurenSchwarz -= 1000
-                    elif self.bewegteFigur[1] == 'P':
-                        self.punkteDurchFigurenSchwarz -= 2000
-                    elif self.bewegteFigur[1] == 'T':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                    elif self.bewegteFigur[1] == 'L':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                    elif self.bewegteFigur[1] == 'D':
-                        self.punkteDurchFigurenSchwarz -= 10000
-
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
-                        pass
-
-                else:
-
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
-                        pass
-                    if self.bewegteFigur[1] == 'B':
-                        self.punkteDurchFigurenSchwarz += 500
-                    elif self.bewegteFigur[1] == 'K':
-                        self.punkteDurchFigurenSchwarz += 1000
-                    elif self.bewegteFigur[1] == 'P':
-                        self.punkteDurchFigurenSchwarz += 2000
-                    elif self.bewegteFigur[1] == 'T':
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.bewegteFigur[1] == 'L':
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.bewegteFigur[1] == 'D':
-                        self.punkteDurchFigurenSchwarz += 10000
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
-                        pass
-
-            
-                if self.spielbrett[self.endZeile][self.endSpalte][:1] == 'w':
+                #if self.möglicheFolgeStellungFürKI == False:
+                #    pass
+                    #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
+                if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                    self.punkteDurchFigurenWeiß -= 500
+                    self.punkteDurchFigurenSchwarz += 500
                     self.anzahlFigurenWeiß -= 1
                     self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                    self.punkteDurchFigurenWeiß -= 1000
+                    self.punkteDurchFigurenSchwarz += 1000
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                    self.punkteDurchFigurenWeiß -= 2000
+                    self.punkteDurchFigurenSchwarz += 2000
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                    self.punkteDurchFigurenWeiß -= 3000
+                    self.punkteDurchFigurenSchwarz += 3000
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                    self.punkteDurchFigurenWeiß -= 3000
+                    self.punkteDurchFigurenSchwarz += 3000
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                    self.punkteDurchFigurenWeiß -= 10000
+                    self.punkteDurchFigurenSchwarz += 10000
+                    self.anzahlFigurenWeiß -= 1
+                    self.figurSchlag = True
+                
+                if self.bewegteFigur[1] == 'B' and self.spielbrett[self.endZeile][self.endSpalte] == '--':
+                    self.punkteDurchFigurenSchwarz += 500
+                elif self.bewegteFigur[1] == 'K':
+                    self.punkteDurchFigurenSchwarz -= 1000
+                elif self.bewegteFigur[1] == 'P':
+                    self.punkteDurchFigurenSchwarz -= 2000
+                elif self.bewegteFigur[1] == 'T':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                elif self.bewegteFigur[1] == 'L':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                elif self.bewegteFigur[1] == 'D':
+                    self.punkteDurchFigurenSchwarz -= 10000
 
-                if self.möglicheFolgeStellungFürKI == False:
-                    print("Anzahl Figuren: ", self.anzahlFigurenSchwarz)
                 self.spielbrett[self.endZeile][self.endSpalte] = '--'
                 self.spielbrett[self.startZeile][self.startSpalte] = '--'
-                self.anzahlFigurenSchwarz -= 1
-    
-                if self.möglicheFolgeStellungFürKI == False:
-                    print("Anzahl Figuren: ", self.anzahlFigurenSchwarz)
-                    
 
+                if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                    self.ToreWeiß += self.anzahlFigurenWeiß 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                    self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                    self.spielBeendet = True
+    
             else:
                 self.spielbrett[self.startZeile][self.startSpalte] = '--'
                 self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
@@ -454,16 +414,33 @@ class SpielStand():
             self.figurSchlag = True
             self.enPassantFelderFürBauerWeiß = np.array([]) 
 
-        elif self.enPassantFürBauerSchwarz:#Der En-Passant-Zug des Bauern wird ausgeführt
+            if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                self.ToreWeiß += self.anzahlFigurenWeiß 
+                self.spielBeendet = True
+            elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                self.spielBeendet = True
+            elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                self.spielBeendet = True
 
+        elif self.enPassantFürBauerSchwarz:#Der En-Passant-Zug des Bauern wird ausgeführt
             if self.möglicheFolgeStellungFürKI:
                 self.enPassantFürBauerSchwarz = False
-            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
             self.spielbrett[self.endZeile-1][self.endSpalte] = '--'
+            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
             self.spielbrett[self.startZeile][self.startSpalte] = '--'
             self.anzahlFigurenWeiß -= 1
             self.figurSchlag = True
             self.enPassantFelderFürBauerSchwarz = np.array([]) 
+
+            if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                self.ToreWeiß += self.anzahlFigurenWeiß 
+                self.spielBeendet = True
+            elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                self.spielBeendet = True
+            elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                self.spielBeendet = True
         
         elif self.neueFigurFürBauern:#Der Bauer bekommt eine neue Figur
         
@@ -475,13 +452,14 @@ class SpielStand():
         elif self.neueFigurFürBauernHilf:#Der Austausch des Bauern mit einer anderen Figur in der nächsten Aktualisierung wird hier vorbereitet
             
             if self.möglicheFolgeStellungFürKI:
+                #self.schlagenEinerFigur()
                 self.neueFigurFürBauernHilf = False
                 self.spielbrett[self.startZeile][self.startSpalte] = '--'
                 self.spielbrett[self.endZeile][self.endSpalte] =  self.neueFigur
                 self.bepunkteDieNeueFigur(self.neueFigur)
         
             else:
-                
+                self.schlagenEinerFigur()
                 self.neueFigurFürBauernHilf = False
                 self.neueFigurFürBauern = True
                 self.spielbrett[self.startZeile][self.startSpalte] = '--'
@@ -558,81 +536,7 @@ class SpielStand():
             self.rochadeGroßSchwarzKIHilf = False
 
         else:
-    
-            if self.zugWeiß:#Hier haben wir den Fall, dass eine gegnerische Figur geschlagen wird
-
-                self.enPassantFürBauerWeiß = False
-                self.enPassantFelderFürBauerWeiß = np.array([])
-
-                if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
-                    self.anzahlFigurenSchwarz -= 1
-                    self.figurSchlag = True
-
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
-                        pass
-                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
-                        self.punkteDurchFigurenSchwarz -= 500
-                        self.punkteDurchFigurenWeiß += 500
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
-                        self.punkteDurchFigurenSchwarz -= 1000
-                        self.punkteDurchFigurenWeiß += 1000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
-                        self.punkteDurchFigurenSchwarz -= 2000
-                        self.punkteDurchFigurenWeiß += 2000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
-                        self.punkteDurchFigurenSchwarz -= 3000
-                        self.punkteDurchFigurenWeiß += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
-                        self.punkteDurchFigurenSchwarz -= 10000
-                        self.punkteDurchFigurenWeiß += 10000
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
-                        pass
-
-            else:
-
-                self.enPassantFürBauerSchwarz = False
-                self.enPassantFelderFürBauerSchwarz = np.array([])
-
-                if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
-                    self.anzahlFigurenWeiß -= 1
-                    self.figurSchlag = True
-
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß vorher: ", self.punkteDurchFigurenWeiß)
-                        #print("Punkte durch Figuren Schwarz vorher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein vorher: ", self.punkte)
-                        pass
-                    if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
-                        self.punkteDurchFigurenWeiß -= 500
-                        self.punkteDurchFigurenSchwarz += 500
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
-                        self.punkteDurchFigurenWeiß -= 1000
-                        self.punkteDurchFigurenSchwarz += 1000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
-                        self.punkteDurchFigurenWeiß -= 2000
-                        self.punkteDurchFigurenSchwarz += 2000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
-                        self.punkteDurchFigurenWeiß -= 3000
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
-                        self.punkteDurchFigurenWeiß -= 3000
-                        self.punkteDurchFigurenSchwarz += 3000
-                    elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
-                        self.punkteDurchFigurenWeiß -= 10000
-                        self.punkteDurchFigurenSchwarz += 10000
-                    if self.möglicheFolgeStellungFürKI == False:
-                        #print("Punkte durch Figuren Weiß nachher: ", self.punkteDurchFigurenWeiß)
-                        #print("Punkte durch Figuren Schwarz nachher: ", self.punkteDurchFigurenSchwarz, " Punkte allgemein nachher: ", self.punkte)
-                        pass
-
-            
-            self.spielbrett[self.startZeile][self.startSpalte] = '--'
-            self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
-            
+            self.schlagenEinerFigur()
             
             if self.bewegteFigur == 'sB' and self.startZeile == 1 and self.endZeile == 3:
                 self.punkteDurchFigurenSchwarz += 1
@@ -640,7 +544,7 @@ class SpielStand():
             elif self.bewegteFigur == 'wB' and self.startZeile == 6 and self.endZeile == 4:
                 self.punkteDurchFigurenWeiß += 1
                 self.punkteDurchFigurenSchwarz -= 1
-
+            
             #Hier wird kontrolliert, ob der Turm oder ob der König benutzt wurden. Dies ist wichtig für die Rochade
             if self.startZeile == 7 and self.startSpalte == 0:
                 self.TurmWeißLinksBenutzt = True
@@ -655,18 +559,8 @@ class SpielStand():
             elif self.startZeile == 0 and self.startSpalte == 4:
                 self.KönigSchwarzBenutzt = True
 
-        if self.anzahlFigurenSchwarz == 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es 
-            
-            self.ToreWeiß += self.anzahlFigurenWeiß #auf dem Feld noch hat
-            self.spielBeendet = True
-
-        elif self.anzahlFigurenWeiß == 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es
-            
-            self.ToreSchwarz += self.anzahlFigurenSchwarz #auf dem Feld noch hat
-            self.spielBeendet = True
-
         #Die Rochade kann nur ein Mal ausgeführt werden, somit darf der Wahrheitswert der Variablen rochadeKleinWeiß nur ein Mal auf True gesetzt werden
-        #Ansonsten könnte es sein, dass der Code in der zugehörigen Bedingung erneut ausgeführt.
+        #Ansonsten könnte es sein, dass der Code in der zugehörigen Bedingung erneut ausgeführt. 
 
         if self.möglicheFolgeStellungFürKI:
             if self.rochadeKleinWeiß:
@@ -691,7 +585,7 @@ class SpielStand():
         if self.möglicheFolgeStellungFürKI:
             self.tor = False
             self.bauernzug = False
-            self.figurSchlag = False     
+            self.figurSchlag = False    
 
         #Die Stellung der Figuren werden in einem Array gespeichert, um zu kontrollieren, ob sich die Stellung der Figuren drei Mal wiederholt.
         self.stellungFiguren = np.append(self.stellungFiguren, np.array([self.spielbrett]), axis=0)
@@ -730,6 +624,86 @@ class SpielStand():
                 self.punkte -= 4
             elif (self.endZeile, self.endSpalte) in self.positionenMitte2:
                 self.punkte -= 6
+        
+
+    def schlagenEinerFigur(self):
+
+        if self.zugWeiß:#Hier haben wir den Fall, dass eine gegnerische Figur geschlagen wird
+
+            if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
+                self.anzahlFigurenSchwarz -= 1
+                self.figurSchlag = True
+
+                if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                    self.punkteDurchFigurenSchwarz -= 500
+                    self.punkteDurchFigurenWeiß += 500
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                    self.punkteDurchFigurenSchwarz -= 1000
+                    self.punkteDurchFigurenWeiß += 1000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                    self.punkteDurchFigurenSchwarz -= 2000
+                    self.punkteDurchFigurenWeiß += 2000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                    self.punkteDurchFigurenWeiß += 3000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                    self.punkteDurchFigurenSchwarz -= 3000
+                    self.punkteDurchFigurenWeiß += 3000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                    self.punkteDurchFigurenSchwarz -= 10000
+                    self.punkteDurchFigurenWeiß += 10000
+
+                if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                    self.ToreWeiß += self.anzahlFigurenWeiß 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                    self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                    self.spielBeendet = True
+
+            self.enPassantFürBauerWeiß = False
+            self.enPassantFelderFürBauerWeiß = np.array([]) 
+
+        else:
+
+            if not self.spielbrett[self.endZeile][self.endSpalte] == '--':
+                self.anzahlFigurenWeiß -= 1
+                self.figurSchlag = True
+                
+                if self.spielbrett[self.endZeile][self.endSpalte][1] == 'B':
+                    self.punkteDurchFigurenWeiß -= 500
+                    self.punkteDurchFigurenSchwarz += 500
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'K':
+                    self.punkteDurchFigurenWeiß -= 1000
+                    self.punkteDurchFigurenSchwarz += 1000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'P':
+                    self.punkteDurchFigurenWeiß -= 2000
+                    self.punkteDurchFigurenSchwarz += 2000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'T':
+                    self.punkteDurchFigurenWeiß -= 3000
+                    self.punkteDurchFigurenSchwarz += 3000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'L':
+                    self.punkteDurchFigurenWeiß -= 3000
+                    self.punkteDurchFigurenSchwarz += 3000
+                elif self.spielbrett[self.endZeile][self.endSpalte][1] == 'D':
+                    self.punkteDurchFigurenWeiß -= 10000
+                    self.punkteDurchFigurenSchwarz += 10000
+
+                if self.anzahlFigurenSchwarz == 0 and self.anzahlFigurenWeiß > 0: #Sobald Schwarz keine Figuren mehr hat, wird das Spiel beendet und Weiß bekommt so viele Punkte, wie viele Figuren es auf dem Feld noch hat  
+                    self.ToreWeiß += self.anzahlFigurenWeiß 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz > 0: #Sobald Weiß keine Figuren mehr hat, wird das Spiel beendet und Schwarz bekommt so viele Punkte, wie viele Figuren es #auf dem Feld noch hat
+                    self.ToreSchwarz += self.anzahlFigurenSchwarz 
+                    self.spielBeendet = True
+                elif self.anzahlFigurenWeiß == 0 and self.anzahlFigurenSchwarz == 0:
+                    self.spielBeendet = True
+
+            self.enPassantFürBauerSchwarz = False 
+            self.enPassantFelderFürBauerSchwarz = np.array([]) 
+        
+        self.spielbrett[self.startZeile][self.startSpalte] = '--'
+        self.spielbrett[self.endZeile][self.endSpalte] = self.bewegteFigur
 
 
     def bepunkteDieNeueFigur(self, neueFigur):
@@ -765,7 +739,7 @@ class SpielStand():
             elif neueFigur == 'sD':
                 self.punkteDurchFigurenSchwarz += 10000
             #elif neueFigur == 'sP':
-            #    self.punkteDurchFigurenSchwarz += 2400                      
+            #    self.punkteDurchFigurenSchwarz += 4000                      
 
     #In dieser Methode wird kontrolliert, ob es eine gegnerische Figur gibt, die in den Bereich der Rochade kommen könnte.
     def kontrollHilfeRochade(self, spalte):
@@ -1032,18 +1006,10 @@ class SpielStand():
                 punkte = 10
             elif zugZeile == 0:
                 punkte = 45
-            #elif startZeile == 7 and zugZeile == 4:
-            #    punkte = 5
-            #elif not len(self.enPassantFelderFürBauerWeiß) == 0:
-            #    z = self.enPassantFelderFürBauerWeiß
-            #    if (startZeile, startSpalte) == z[0] and (zugZeile, zugSpalte) == z[1]:
-            #        punkte = 10
-            #elif startZeile == 6 and zugZeile == 4:
-            #    punkte = 15 
 
             if punkte == 0:
                 punkte = 1
-            #print("Die Punkte die durch diesen Bauern hinzugekommen sind: ", punkte + 10)
+
             self.punkte -= (punkte)
             
         else:
@@ -1065,16 +1031,10 @@ class SpielStand():
                 punkte += 10
             elif zugZeile == 7:
                 punkte += 45 
-            #elif not len(self.enPassantFelderFürBauerSchwarz) == 0:
-            #    z = self.enPassantFelderFürBauerSchwarz
-            #    if (startZeile, startSpalte) == z[0] and (zugZeile, zugSpalte) == z[1]:
-            #        punkte += 10
-            #elif startZeile == 1 and zugZeile == 3:
-            #    punkte += 15 
 
             if punkte == 0:
                 punkte = 1
-            #print("Die Punkte die durch diesen Bauern hinzugekommen sind: ", punkte + 10)
+    
             self.punkte += (punkte)
 
 
@@ -1172,11 +1132,10 @@ class SpielStand():
     #In dieser Methode werden alle Züge, die in dieser Stellung der Figuren gemacht werden können ermittelt. Alle möglichen Züge werden bepunktet und diese
     #Punkte werden aufaddiert. Somit ergibt sich die Gesamtpunktzahl für diese Stellung der Figuren. In einem Array werden alle möglichen Züge, die Punkte dieser
     #Stellung der Figuren, die Figur, mit dem der Zug gemacht wurde und die Folgestellung, die durch diesen Zug entstanden ist, gespeichert. 
-    def ermittleAlleMöglichenZüge(self, kopieKnoten, listeEltern: List, listeKinder: List, listeZuLöschenderKnoten: List, erstelleKinder = True):
+    def ermittleAlleMöglichenZüge(self, kopieKnoten, listeEltern: List, listeKinder: List, listeZuLöschenderKnoten: List, bewerteKnoten = True, erstelleKinder = True):
         
         if self.spielBeendet == True:
             
-            erstelleKinder = False
             if self.ToreWeiß > self.ToreSchwarz:
                 self.punkte = float('-inf')
                 #print("Weiß hat das Spiel gewonnen.")
@@ -1188,6 +1147,8 @@ class SpielStand():
             hilf = 0
             self.punkte = self.punkteDurchFigurenSchwarz - self.punkteDurchFigurenWeiß
 
+            #i: index der aktuellen Zeile, zeile aktuelle Zeile des Arrays
+            #l: index des aktuellen Elements in der aktuellen Zeile, _: aktuelles Element des Arrays
             for i, zeile in enumerate(self.spielbrett):
                 for l, _ in enumerate(zeile):
                     hilf+=1
@@ -1221,7 +1182,8 @@ class SpielStand():
                                
                                 for x in list: 
 
-                                    self.bewertungBauer(x[0], x[1], i, l)
+                                    if bewerteKnoten:
+                                        self.bewertungBauer(x[0], x[1], i, l)
 
                                     if erstelleKinder:
                                         
@@ -1261,22 +1223,15 @@ class SpielStand():
 
                                         self.kinder.append(kopie)
                                         listeKinder.append(kopie)
-                                        kopie.elternknoten = self 
-
-                        elif(self.spielbrett[i][l] == 'sB'):
-                            
-                            list = self.kontrolliereBauern(i, l, 0, 0, True)
-
-                            for x in list:
-                                
-                                self.bewertungBauer(x[0], x[1], i, l)          
+                                        kopie.elternknoten = self         
 
                         elif(self.spielbrett[i][l] == 'wT'):
                                                         
                             list = self.kontrolliereTurm(i, l, 0, 0, True)
                             for x in list:
                                 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
     
                                 if erstelleKinder:
 
@@ -1291,21 +1246,15 @@ class SpielStand():
                                     listeKinder.append(kopie)           
                                     kopie.elternknoten = self   
 
-                        elif(self.spielbrett[i][l] == 'sT'):
-                               
-                            list = self.kontrolliereTurm(i, l, 0, 0, True)
-
-                            for x in list:
-                                
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'wP'):
                             
                             list = self.kontrolliereSpringer(i, l, 0, 0, True)
 
                             for x in list:
+                                
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                                 if erstelleKinder:
                                     
                                     kopie = kopieKnoten.kopiereSpielStand()
@@ -1318,21 +1267,14 @@ class SpielStand():
                                     listeKinder.append(kopie)                   
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'sP'):
-                            
-                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
-
-                            for x in list:
-
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'wL'):
                         
                             list = self.kontrolliereLäufer(i, l, 0, 0, True)
 
                             for x in list:
                                 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                                 
                                 if erstelleKinder:
                                 
@@ -1346,21 +1288,14 @@ class SpielStand():
                                     listeKinder.append(kopie)              
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'sL'):
-                               
-                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
-
-                            for x in list:
-                            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'wD'):
                             
                             list = self.kontrolliereDame(i, l, 0, 0, True)
 
                             for x in list:
-                            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                                 
                                 if erstelleKinder:
                                     
@@ -1373,22 +1308,15 @@ class SpielStand():
                                     self.kinder.append(kopie)
                                     listeKinder.append(kopie)              
                                     kopie.elternknoten = self
-                        
-                        elif(self.spielbrett[i][l] == 'sD'):
-                            
-                            list = self.kontrolliereDame(i, l, 0, 0, True)
-
-                            for x in list:
-                                
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
 
                         elif(self.spielbrett[i][l] == 'wK'):
                             
                             list = self.kontrolliereKönig(i, l, 0, 0, True)
                             
                             for x in list:
-            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                     
                                 if erstelleKinder:
                             
@@ -1404,31 +1332,48 @@ class SpielStand():
                                     listeKinder.append(kopie)               
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'sK'):
-                            
-                            list = self.kontrolliereKönig(i, l, 0, 0, True)
+                        if bewerteKnoten:
+                            if(self.spielbrett[i][l] == 'sB'):
+                                list = self.kontrolliereBauern(i, l, 0, 0, True)
+                                for x in list:        
+                                    self.bewertungBauer(x[0], x[1], i, l)   
 
-                            for x in list:
-                                
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                            elif(self.spielbrett[i][l] == 'sT'):     
+                                list = self.kontrolliereTurm(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l) 
+
+                            elif(self.spielbrett[i][l] == 'sP'): 
+                                list = self.kontrolliereSpringer(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'sL'):
+                                list = self.kontrolliereLäufer(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'sD'):
+                                list = self.kontrolliereDame(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'sK'):
+                                list = self.kontrolliereKönig(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
 
                     else:
 
                         if(self.spielbrett[i][l] == 'sB'):
                     
                             if i == 7 and (not (l == 3 or l == 4)):
-                                #figurenSchwarz = ['sP', 'sD']
-                                #for f in figurenSchwarz:
 
                                 f = 'sD'
-                                #kopieKnoten.zugWeiß = not kopieKnoten.zugWeiß
                                 kopie = kopieKnoten.kopiereSpielStand()
-                                #print("Kopie, Punkte: ", kopie.punkte)
-                                #print("Self, Punkte: ", self.punkte)
-                                #print("Geliche Referenz: ", kopie is self)
                                 kopie.neueFigurFürBauernHilf = True
                                 kopie.führeMöglichenZugAus(f, (i,l), (i,l))
-                                #kopie.zugWeiß = False
+                            
                                 if not self.elternknoten == None:
                                     self.elternknoten.kinder.append(kopie)
                                     kopie.elternknoten = self.elternknoten
@@ -1443,15 +1388,14 @@ class SpielStand():
 
                                 for x in list:
                                     
-                                    self.bewertungBauer(x[0], x[1], i, l)
+                                    if bewerteKnoten:
+                                        self.bewertungBauer(x[0], x[1], i, l)
 
                                     if erstelleKinder:
                                         
                                         kopie = kopieKnoten.kopiereSpielStand()
                                         kopie.kinder = []
                                         kopie.punkte = 0
-                                        #print("Sind die Kopien der Klasse identisch: ", self is kopie)
-                                        #print("Sind die Attribute der Kopien identisch: ", self.punkte is kopie.punkte)
 
                                         if self.enPassantFürBauerSchwarzKI:
                                             if [(i,l), (x[0], x[1])] == self.enPassantFelderFürBauerSchwarz:
@@ -1486,19 +1430,15 @@ class SpielStand():
                                         listeKinder.append(kopie)
                                         kopie.elternknoten = self 
 
-                        elif(self.spielbrett[i][l] == 'wB'):
-
-                            list = self.kontrolliereBauern(i, l, 0, 0, True)
-                            for x in list:
-                                self.bewertungBauer(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'sT'):
                             
                             list = self.kontrolliereTurm(i, l, 0, 0, True)
 
                             for x in list:
                                 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
                                 if erstelleKinder:
                                 
                                     kopie = kopieKnoten.kopiereSpielStand()
@@ -1511,21 +1451,14 @@ class SpielStand():
                                     listeKinder.append(kopie)               
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'wT'):
-                            
-                            list = self.kontrolliereTurm(i, l, 0, 0, True)
-
-                            for x in list:
-                                
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'sP'):
                             
                             list = self.kontrolliereSpringer(i, l, 0, 0, True)
 
                             for x in list:
 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                             
                                 if erstelleKinder:
                                 
@@ -1539,22 +1472,14 @@ class SpielStand():
                                     listeKinder.append(kopie)                  
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'wP'):
-                            
-                            list = self.kontrolliereSpringer(i, l, 0, 0, True)
-
-                            for x in list:
-
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
-
                         elif(self.spielbrett[i][l] == 'sL'):
                            
                             list = self.kontrolliereLäufer(i, l, 0, 0, True)
 
                             for x in list:
-                            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                                 
                                 if erstelleKinder:
                                 
@@ -1568,21 +1493,14 @@ class SpielStand():
                                     listeKinder.append(kopie)                 
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'wL'):
-                            
-                            list = self.kontrolliereLäufer(i, l, 0, 0, True)
-
-                            for x in list:
-                                
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'sD'):
                             
                             list = self.kontrolliereDame(i, l, 0, 0, True)
 
                             for x in list:
                                 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
 
                                 if erstelleKinder:
                                     
@@ -1596,21 +1514,14 @@ class SpielStand():
                                     listeKinder.append(kopie)                 
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'wD'):
-                            
-                            list = self.kontrolliereDame(i, l, 0, 0, True)
-
-                            for x in list:
-                            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-
                         elif(self.spielbrett[i][l] == 'sK'):
                             
                             list = self.kontrolliereKönig(i, l, 0, 0, True)
 
                             for x in list:
                                 
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+                                if bewerteKnoten:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
                                 
                                 if erstelleKinder:
                     
@@ -1626,14 +1537,37 @@ class SpielStand():
                                     listeKinder.append(kopie)            
                                     kopie.elternknoten = self
 
-                        elif(self.spielbrett[i][l] == 'wK'):
-                            
-                            list = self.kontrolliereKönig(i, l, 0, 0, True)
-                            
-                            for x in list:
-            
-                                self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
-        #self.zugWeiß = not self.zugWeiß
+                        if bewerteKnoten:
+
+                            if(self.spielbrett[i][l] == 'wB'):
+                                list = self.kontrolliereBauern(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungBauer(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'wT'):
+                                list = self.kontrolliereTurm(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'wP'):
+                                list = self.kontrolliereSpringer(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'wL'):
+                                list = self.kontrolliereLäufer(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'wD'):
+                                list = self.kontrolliereDame(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
+
+                            elif(self.spielbrett[i][l] == 'wK'):
+                                list = self.kontrolliereKönig(i, l, 0, 0, True)
+                                for x in list:
+                                    self.bewertungTurmSpringerLäuferDameKönig(x[0], x[1], i, l)
 
     #Es wird kontrolliert, ob der Bauer in dem heweiligen Feld einen Zug machen kann
     def kontrolliereBauernZug(self,zeile,spalte):
@@ -1746,7 +1680,6 @@ class SpielStand():
                     if not len(self.enPassantFelderFürBauerSchwarz) == 0:
                         #Falls der Bauer einen En-Passant-Zug machen kann, wird dies getan. Festgestellt wird es dadurch, ob der Zug im Array abgespeichert ist oder 
                         #nicht.
-                        
                         e = self.enPassantFelderFürBauerSchwarz
 
                         if ki:
